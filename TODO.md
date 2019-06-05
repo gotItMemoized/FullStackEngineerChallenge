@@ -1,0 +1,13 @@
+- [x] login with basic user/admin
+- [x] different UI for admin/user
+- [ ] User CRUD for admin
+- [ ] database interfaces instead of going straight to postgresql (or use docker?)
+- [ ] Perf. Review CRUD for admin
+- [ ] Perf. Review CRUD for user
+- [ ] tests
+- [ ] make sure mobile looks ok
+- [ ] review Instructions.md
+- [ ] review/cleanup DESIGN.md
+- [ ] add a notes/compromises.md file to allow for longer explanations if necessary?
+- [ ] more tests
+- [ ] docker containerize it so dependencies will be less of a bother for the interview team
