@@ -53,8 +53,8 @@ Using postgresql and taking advantage of sql and sqlx packages for golang.
 |name|description|
 |-|-|
 |id|reference id|
-|userId|user getting reviewed|
-|reviewerId|user giving feedback|
+|reviewId|reviews table FK|
+|reviewerId|user giving feedback FK|
 |feedback|feedback content|
 
 #### Database Design Compromises

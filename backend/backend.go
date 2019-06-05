@@ -70,6 +70,7 @@ func main() {
 	// database set up based on flag
 	if (*resetDatabase) && os.Getenv("ENV") == "DEV" {
 		log.Println("Resetting database")
+		// load the .sql files
 		clearFile, err := ioutil.ReadFile("./sql/clear.sql")
 		if err != nil {
 			log.Fatal(err)
@@ -78,6 +79,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		// run the .sql files
 		_, err = db.Exec(string(clearFile))
 		if err != nil {
 			log.Fatal(err)
@@ -92,10 +94,12 @@ func main() {
 	// seed with initial data if we have the seedDatabase flag
 	if (*seedDatabase) && os.Getenv("ENV") == "DEV" {
 		log.Println("Seeding database")
+		// load the sql file
 		seedFile, err := ioutil.ReadFile("./sql/seed.sql")
 		if err != nil {
 			log.Fatal(err)
 		}
+		// run it
 		_, err = db.Exec(string(seedFile))
 		if err != nil {
 			log.Fatal(err)
@@ -181,8 +185,7 @@ func adminAuthenticator(next http.Handler) http.Handler {
 		}
 
 		isAdmin, hasIsAdminClaim := claims["isAdmin"]
-
-		if token == nil || !token.Valid || !(hasIsAdminClaim && isAdmin == "true") {
+		if token == nil || !token.Valid || !(hasIsAdminClaim && isAdmin == true) {
 			http.Error(w, http.StatusText(401), 401)
 			return
 		}

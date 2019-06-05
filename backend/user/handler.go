@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -64,27 +65,112 @@ func (u *UserService) CurrentUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserService) Create(w http.ResponseWriter, r *http.Request) {
-	// TODO: create
-	writeToOutput(w, User{})
-}
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+	var user User
+	err := decoder.Decode(&user)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not decode user"))
+		http.Error(w, "Error creating user", http.StatusBadRequest)
+		return
+	}
 
-type credentials struct {
-	Username string `json:"username" bson:"username"`
-	Password string `json:"password" bson:"-"`
-}
+	if u.getByUsername(user.Username) != nil {
+		http.Error(w, "User already exists", http.StatusBadRequest)
+		return
+	}
 
-type tokens struct {
-	JWT string `json:"jwt"`
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not hash password"))
+		http.Error(w, "Error creating user", http.StatusBadRequest)
+		return
+	}
+	user.PasswordHash = string(hash)
+
+	err = u.create(&user)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not save user"))
+		http.Error(w, "Error creating user", http.StatusBadRequest)
+		return
+	}
+	// in some cases it'd be nice to return the userid on create,
+	// but in this case we'll skip that
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (u *UserService) Update(w http.ResponseWriter, r *http.Request) {
 	// TODO: updates
-	writeToOutput(w, User{})
+	idToUpdate := chi.URLParam(r, "id")
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+	var updatedUser User
+	err := decoder.Decode(&updatedUser)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not decode user"))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	updatedUser.ID = idToUpdate
+	possiblyExistingUser := u.getByUsername(updatedUser.Username)
+	if possiblyExistingUser != nil && possiblyExistingUser.ID != updatedUser.ID {
+		http.Error(w, "User already exists", http.StatusBadRequest)
+		return
+	}
+
+	if len(updatedUser.NewPassword) != 0 {
+		hash, err := bcrypt.GenerateFromPassword([]byte(updatedUser.NewPassword), bcrypt.DefaultCost)
+		if err != nil {
+			log.Print(errors.Wrap(err, "Could not hash password"))
+			http.Error(w, "Error updating user", http.StatusInternalServerError)
+			return
+		}
+		updatedUser.PasswordHash = string(hash)
+	}
+
+	err = u.update(&updatedUser)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not update user"))
+		http.Error(w, "Could not update user", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (u *UserService) Delete(w http.ResponseWriter, r *http.Request) {
-	// TODO: delete
-	writeToOutput(w, User{})
+	toDeleteId := chi.URLParam(r, "id")
+
+	parsedDeleteId, err := strconv.ParseInt(toDeleteId, 10, 64)
+	if err != nil {
+		log.Printf("Couldn't parse int for deleting\n%+v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	userID := claims["id"].(string)
+	if len(userID) == 0 {
+		http.Error(w, "Could not confirm user", http.StatusUnauthorized)
+		return
+	}
+	parsedUserId, err := strconv.ParseInt(userID, 10, 64)
+	if err != nil {
+		log.Printf("Couldn't parse int for deleting\n%+v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	if parsedUserId == parsedDeleteId {
+		log.Printf("User tried to delete themselves\n%+v\n", err)
+		http.Error(w, "Cannot delete yourself", http.StatusUnauthorized)
+	}
+
+	err = u.delete(parsedDeleteId)
+	if err != nil {
+		log.Printf("Couldn't delete user\n%+v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (u *UserService) Login(w http.ResponseWriter, r *http.Request) {
@@ -137,4 +223,13 @@ func writeToOutput(w http.ResponseWriter, object interface{}) {
 	if err != nil {
 		log.Printf("error while writing output: %+v\n", err)
 	}
+}
+
+type credentials struct {
+	Username string `json:"username" bson:"username"`
+	Password string `json:"password" bson:"-"`
+}
+
+type tokens struct {
+	JWT string `json:"jwt"`
 }

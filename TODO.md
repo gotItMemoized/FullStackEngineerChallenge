@@ -1,9 +1,10 @@
 - [x] login with basic user/admin
 - [x] different UI for admin/user
-- [ ] User CRUD for admin
+- [x] User CRUD for admin
 - [ ] database interfaces instead of going straight to postgresql (or use docker?)
 - [ ] Perf. Review CRUD for admin
 - [ ] Perf. Review CRUD for user
+- [ ] proptypes
 - [ ] tests
 - [ ] make sure mobile looks ok
 - [ ] review Instructions.md
