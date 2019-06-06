@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gotItMemoized/FullStackEngineerChallenge/backend/pr"
+
 	"github.com/gotItMemoized/FullStackEngineerChallenge/backend/user"
 
 	"github.com/go-chi/chi"
@@ -46,6 +48,7 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	userService := &user.UserService{}
+	reviewService := &pr.ReviewService{}
 
 	// this just lets us safely ctrl-c out of the app while running easily
 	// runs in a goroutine and just listens for an interrupt
@@ -54,6 +57,7 @@ func main() {
 		log.Println(sig)
 		log.Println("Shutting down")
 		userService.Stop()
+		reviewService.Stop()
 		os.Exit(0)
 	}()
 
@@ -109,9 +113,10 @@ func main() {
 
 	// setup the service
 	userService.Start(db, tokenAuth)
+	reviewService.Start(db)
 
 	// set up api routes
-	router := getRouter(tokenAuth, userService)
+	router := getRouter(tokenAuth, userService, reviewService)
 	// serve http routes, you'd want to set up local certs and https for security though
 	err = http.ListenAndServe(":8000", router)
 	if err != nil {
@@ -119,7 +124,7 @@ func main() {
 	}
 }
 
-func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService) http.Handler {
+func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService, reviewService *pr.ReviewService) http.Handler {
 	r := chi.NewRouter()
 
 	// A good base middleware stack
@@ -157,7 +162,7 @@ func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService) http.Handle
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(jwtauth.Authenticator)
 			// r.Get("/me", reviewService.MyFeedback)
-			// r.Get("/{id}", reviewService.Get)
+			r.Get("/{id}", reviewService.Get)
 			// r.Post("/{id}", reviewService.Update)
 		})
 
@@ -165,9 +170,10 @@ func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService) http.Handle
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(adminAuthenticator)
+			r.Get("/all", reviewService.All)
 			// r.Get("/all/{id}", reviewService.AllForUser)
-			// r.Post("/{id}", reviewService.Update)
-			// r.Post("/", reviewService.Create)
+			r.Post("/{id}", reviewService.Update)
+			r.Post("/", reviewService.Create)
 		})
 	})
 

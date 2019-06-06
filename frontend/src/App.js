@@ -10,6 +10,10 @@ const UserHome = lazy(() => import('./pages/userHome'));
 const Users = lazy(() => import('./pages/users'));
 const NewUser = lazy(() => import('./pages/newUser'));
 const EditUser = lazy(() => import('./pages/editUser'));
+const AdminPerformanceSelector = lazy(() => import('./pages/adminPRSelection'));
+const AdminPerformanceManager = lazy(() => import('./pages/adminPRManager'));
+const AdminPerformanceNew = lazy(() => import('./pages/adminPRNew'));
+const AdminPerformanceEdit = lazy(() => import('./pages/adminPREdit'));
 
 const App = () => {
   const [user, setUser] = useLocalStorage(
@@ -49,6 +53,38 @@ const App = () => {
             path="/users/:id/edit"
             component={props => (
               <EditUser currentUser={parsedUser} setCurrentUser={setStringedUser} {...props} />
+            )}
+          />
+          <Route
+            exact
+            path="/performance"
+            component={() => (
+              <AdminPerformanceSelector currentUser={parsedUser} setCurrentUser={setStringedUser} />
+            )}
+          />
+          <Route
+            exact
+            path="/performance-manager"
+            component={() => (
+              <AdminPerformanceManager currentUser={parsedUser} setCurrentUser={setStringedUser} />
+            )}
+          />
+          <Route
+            exact
+            path="/performance-manager/new"
+            component={() => (
+              <AdminPerformanceNew currentUser={parsedUser} setCurrentUser={setStringedUser} />
+            )}
+          />
+          <Route
+            exact
+            path="/performance-manager/:id/edit"
+            component={props => (
+              <AdminPerformanceEdit
+                currentUser={parsedUser}
+                setCurrentUser={setStringedUser}
+                {...props}
+              />
             )}
           />
           <Route path="/login" component={() => <Redirect to="/" />} />

@@ -2,8 +2,9 @@
 - [x] different UI for admin/user
 - [x] User CRUD for admin
 - [ ] database interfaces instead of going straight to postgresql (or use docker?)
-- [ ] Perf. Review CRUD for admin
+- [X] Perf. Review CRUD for admin
 - [ ] Perf. Review CRUD for user
+- [ ] Return pending feedback count
 - [ ] proptypes
 - [ ] tests
 - [ ] make sure mobile looks ok
@@ -11,4 +12,5 @@
 - [ ] review/cleanup DESIGN.md
 - [ ] add a notes/compromises.md file to allow for longer explanations if necessary?
 - [ ] more tests
+- [ ] coordinate page colors better
 - [ ] docker containerize it so dependencies will be less of a bother for the interview team

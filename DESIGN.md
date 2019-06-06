@@ -55,8 +55,10 @@ Using postgresql and taking advantage of sql and sqlx packages for golang.
 |id|reference id|
 |reviewId|reviews table FK|
 |reviewerId|user giving feedback FK|
-|feedback|feedback content|
+|message|feedback content|
 
 #### Database Design Compromises
 
 As mentioned in the Auth section. I'm omitting some security things like refresh tokens. So there's no additional table for that. I'm also omitting timestamps (create, update, etc) from the tables for the sake of simplicity, but it'd be important to have in a real application.
+
+Assigning a performance review can be added and deleted at any point. This can be a desired feature, but this current design doesn't allow for logical deletes. Logical deletes would allow you to delete, and undelete an item. This prevents you from losing the feedback message from the assigned user.

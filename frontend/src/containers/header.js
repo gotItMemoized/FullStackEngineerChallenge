@@ -7,6 +7,5 @@ export default ({ user, setUser }) => {
       setUser({ loggedIn: false, isAdmin: false });
     }
   };
-
   return <Header logoutAction={logoutAction} currentUser={user} />;
 };
