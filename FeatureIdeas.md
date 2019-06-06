@@ -8,6 +8,6 @@ Ideas of things that could be added if given more time.
 - a11y linting
 - precommit hooks for linters, formatters, tests
 - regular users can change their own passwords
-- proper pagination for get all users
-- access codes for specific to send to a user to do a performance review
+- proper pagination for get all users/performance reviews/feedback
+- access codes for a specific reviewer/review
 - redis cache?

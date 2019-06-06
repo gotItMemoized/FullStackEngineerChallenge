@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/jwtauth"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -15,8 +16,7 @@ type ReviewService struct {
 }
 
 func (rs *ReviewService) All(w http.ResponseWriter, r *http.Request) {
-	// TODO: get all
-	// maybe add filters
+
 	reviews := rs.getAllReviews()
 
 	if reviews == nil {
@@ -40,7 +40,6 @@ func (rs *ReviewService) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rs *ReviewService) Create(w http.ResponseWriter, r *http.Request) {
-	// TODO: create
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 	var review Review
@@ -83,7 +82,6 @@ func (rs *ReviewService) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rs *ReviewService) Update(w http.ResponseWriter, r *http.Request) {
-	// TODO: updates
 	idToUpdate := chi.URLParam(r, "id")
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
@@ -119,38 +117,81 @@ func (rs *ReviewService) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (rs *ReviewService) Done(w http.ResponseWriter, r *http.Request) {
-	// TODO: sets reviews as done
-	// doneReviewId := chi.URLParam(r, "id")
+func (rs *ReviewService) GetPendingFeedbackForReviewer(w http.ResponseWriter, r *http.Request) {
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	userID := claims["id"].(string)
+	if len(userID) == 0 {
+		http.Error(w, "Could not confirm user", http.StatusUnauthorized)
+		return
+	}
+	reviews := rs.getAllFeedbackForReviewer(userID)
 
-	// parsedReviewId, err := strconv.ParseInt(doneReviewId, 10, 64)
-	// if err != nil {
-	// 	log.Printf("Couldn't parse int for marking as done\n%+v\n", err)
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// }
+	if reviews == nil {
+		http.Error(w, "[]", http.StatusNotFound)
+		return
+	}
 
-	// _, claims, _ := jwtauth.FromContext(r.Context())
-	// userID := claims["id"].(string)
-	// if len(userID) == 0 {
-	// 	http.Error(w, "Could not confirm user", http.StatusUnauthorized)
-	// 	return
-	// }
-	// parsedUserId, err := strconv.ParseInt(userID, 10, 64)
-	// if err != nil {
-	// 	log.Printf("Couldn't parse int for deleting\n%+v\n", err)
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// }
+	writeToOutput(w, reviews)
+}
 
-	// if parsedUserId == parsedDeleteId {
-	// 	log.Printf("User tried to delete themselves\n%+v\n", err)
-	// 	http.Error(w, "Cannot delete yourself", http.StatusUnauthorized)
-	// }
+func (rs *ReviewService) GetFeedback(w http.ResponseWriter, r *http.Request) {
+	feedbackID := chi.URLParam(r, "id")
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	userID := claims["id"].(string)
+	if len(userID) == 0 {
+		http.Error(w, "Could not confirm user", http.StatusUnauthorized)
+		return
+	}
+	feedback := rs.getFeedbackForReviewer(userID, feedbackID)
 
-	// err = u.delete(parsedDeleteId)
-	// if err != nil {
-	// 	log.Printf("Couldn't delete user\n%+v\n", err)
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// }
+	if feedback == nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+
+	writeToOutput(w, feedback)
+}
+
+func (rs *ReviewService) GiveFeedback(w http.ResponseWriter, r *http.Request) {
+	idToUpdate := chi.URLParam(r, "id")
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+	var updatedReview FlatFeedback
+	err := decoder.Decode(&updatedReview)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not decode review"))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	updatedReview.ID = idToUpdate
+
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	userID := claims["id"].(string)
+	if len(userID) == 0 {
+		http.Error(w, "Could not confirm user", http.StatusUnauthorized)
+		return
+	}
+
+	if !updatedReview.Message.Valid || len(updatedReview.Message.String) == 0 {
+		log.Print(errors.New("Empty or invalid message"))
+		http.Error(w, "Empty or invalid message", http.StatusBadRequest)
+		return
+	}
+
+	existingReview := rs.getFeedbackForReviewer(userID, idToUpdate)
+	if existingReview == nil {
+		log.Print(errors.Wrap(err, "Could not update feedback"))
+		http.Error(w, "Could not update feedback", http.StatusNotFound)
+		return
+	}
+
+	err = rs.updateFeedback(&updatedReview)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not update review"))
+		http.Error(w, "Could not update review", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
 

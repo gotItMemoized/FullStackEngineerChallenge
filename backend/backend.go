@@ -143,7 +143,6 @@ func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService, reviewServi
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(jwtauth.Authenticator)
 			r.Get("/all", userService.All)
-			r.Get("/me", userService.CurrentUser)
 			r.Get("/{id}", userService.Get)
 		})
 		// admin only stuff
@@ -156,14 +155,11 @@ func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService, reviewServi
 		})
 	})
 
-	// TODO: wire up reviewService
 	r.Route("/review", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(jwtauth.Authenticator)
-			// r.Get("/me", reviewService.MyFeedback)
 			r.Get("/{id}", reviewService.Get)
-			// r.Post("/{id}", reviewService.Update)
 		})
 
 		// admin only stuff
@@ -171,9 +167,18 @@ func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService, reviewServi
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(adminAuthenticator)
 			r.Get("/all", reviewService.All)
-			// r.Get("/all/{id}", reviewService.AllForUser)
 			r.Post("/{id}", reviewService.Update)
 			r.Post("/", reviewService.Create)
+		})
+	})
+
+	r.Route("/feedback", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(jwtauth.Verifier(auth))
+			r.Use(jwtauth.Authenticator)
+			r.Get("/all", reviewService.GetPendingFeedbackForReviewer)
+			r.Get("/{id}", reviewService.GetFeedback)
+			r.Post("/{id}", reviewService.GiveFeedback)
 		})
 	})
 

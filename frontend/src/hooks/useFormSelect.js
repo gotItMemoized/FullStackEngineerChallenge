@@ -11,7 +11,6 @@ export default function useFormSelect(initial) {
   return {
     value,
     onChange: event => {
-      console.log(event);
       setValue(event);
     },
   };

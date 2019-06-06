@@ -26,7 +26,6 @@ export default ({ currentUser, reviewId }) => {
           label: `${feedback.reviewer.name} (${feedback.reviewer.username})`,
         };
       });
-      console.log(converted.feedback);
       setReview(converted);
     };
     if (reviewId) {
@@ -40,6 +39,7 @@ export default ({ currentUser, reviewId }) => {
       setUsers(
         result.data.map(user => {
           return {
+            feedback: user,
             label: `${user.name} (${user.username})`,
             key: user.id,
             value: user.id,
@@ -54,20 +54,17 @@ export default ({ currentUser, reviewId }) => {
     let url = reviewId ? `/review/${reviewId}` : '/review';
     post(url, reviewData)
       .then(response => {
-        console.log('user submit resp', response);
         setSubmitted(true);
         // then redirect back to list
       })
       .catch(err => {
-        console.log('error', err.response);
         setError(err.response ? err.response.data : 'Error saving your data');
         // set the error
       });
   };
 
-  // TODO: fix this to a better redirect url for admin
   return submitted ? (
-    <Redirect to="/performance" />
+    <Redirect to="/performance-manager" />
   ) : (
     <PerformanceReviewEditForm
       currentUser={currentUser}

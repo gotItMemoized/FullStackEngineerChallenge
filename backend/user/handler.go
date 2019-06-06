@@ -47,23 +47,6 @@ func (u *UserService) Get(w http.ResponseWriter, r *http.Request) {
 	writeToOutput(w, user)
 }
 
-func (u *UserService) CurrentUser(w http.ResponseWriter, r *http.Request) {
-	_, claims, _ := jwtauth.FromContext(r.Context())
-	userID := claims["id"].(string)
-	if len(userID) == 0 {
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-	}
-	user := u.getUserById(userID)
-
-	if user == nil {
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-	}
-
-	writeToOutput(w, user)
-}
-
 func (u *UserService) Create(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
@@ -100,7 +83,6 @@ func (u *UserService) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserService) Update(w http.ResponseWriter, r *http.Request) {
-	// TODO: updates
 	idToUpdate := chi.URLParam(r, "id")
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()

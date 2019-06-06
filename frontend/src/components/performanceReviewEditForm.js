@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Select from 'react-select';
 import useFormCheckbox from '../hooks/useFormCheckbox';
 import useFormSelect from '../hooks/useFormSelect';
+import Message from './message';
 
 export default ({ error, users = [], review = {}, submit = () => {} }) => {
   const user = useFormSelect(review.user);
@@ -27,6 +28,37 @@ export default ({ error, users = [], review = {}, submit = () => {} }) => {
   ) {
     buttonAttributes.disabled = true;
   }
+
+  // let the user know that they're making the PR inactive, and no one has responded yet
+  const showWarning = () => {
+    if (
+      !review.id ||
+      isActive.checked ||
+      (assignedUsers.value && assignedUsers.value.length === 0)
+    ) {
+      return;
+    }
+    let hasMessage = false;
+    for (const user of assignedUsers.value) {
+      const { feedback } = user;
+      if (
+        feedback &&
+        feedback.message &&
+        feedback.message.String &&
+        feedback.message.String.length > 0
+      ) {
+        hasMessage = true;
+        break;
+      }
+    }
+    if (!hasMessage) {
+      return (
+        <Message className="is-warning">
+          None of the assigned users have sent in feedback yet.
+        </Message>
+      );
+    }
+  };
 
   const onSubmit = event => {
     event.preventDefault();
@@ -68,9 +100,10 @@ export default ({ error, users = [], review = {}, submit = () => {} }) => {
         </div>
         <div className="field">
           <label className="checkbox" htmlFor="isActive">
-            <input type="checkbox" id="isActive" {...isActive} /> Is Active
+            <input type="checkbox" id="isActive" {...isActive} /> Allow Responses
           </label>
         </div>
+        {showWarning()}
         <div className="field">
           <label className="label" htmlFor="assignedUsers">
             Assigned Users

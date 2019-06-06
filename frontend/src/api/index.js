@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Wrappers for the get/post
+// Auth Wrappers for the get/post
 
 export const post = (url, data, useAuth) => {
   const headers = {};
@@ -29,19 +29,3 @@ export const deleteUser = id => {
     },
   });
 };
-
-axios.interceptors.response.use(
-  response => {
-    return response;
-  },
-  error => {
-    const {
-      response: { status },
-    } = error;
-
-    if (status === 401) {
-      localStorage.removeItem('jwt_token');
-    }
-    return Promise.reject(error);
-  },
-);

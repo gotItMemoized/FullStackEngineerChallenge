@@ -11,7 +11,6 @@ import (
 
 func (rs *ReviewService) getAllReviews() []Review {
 	var results []Review
-	// TODO: this is a partial query, it doesn't get all the connected information
 	rows, err := rs.db.Queryx(`
 		select r.*,
 					 u.id as "user.id",
@@ -33,6 +32,10 @@ func (rs *ReviewService) getAllReviews() []Review {
 			log.Print(err)
 		}
 		results = append(results, review)
+	}
+
+	if results == nil {
+		results = make([]Review, 0)
 	}
 
 	return results
@@ -106,21 +109,89 @@ func (rs *ReviewService) getReviewById(reviewId string) *Review {
 	return &result
 }
 
-func (rs *ReviewService) getByReviewer(userId string) *Review {
-	// var result Review
-	// err := u.db.Get(&result, `
-	// 	select *
-	// 	from users
-	// 	where username = $1
-	// `, username)
+func (rs *ReviewService) getAllFeedbackForReviewer(userID string) []FlatFeedback {
+	var results []FlatFeedback
+	rows, err := rs.db.Queryx(`
+		select fb.id as "id",
+					 r.id as "reviewid",
+					 fb.reviewerid as "reviewerid",
+					 r.userid as "userid",
+					 u.username as "username",
+					 u.name as "name",
+					 fb.*
+			from reviews r
+			join users u on u.id = r.userid
+			join reviews_feedback fb on fb.reviewid = r.id
+			where fb.reviewerid = $1 and r.isactive = true
+	`, userID)
 
-	// if err != nil {
-	// 	log.Printf("Could not get the user\n%+v\n", err)
-	// 	return nil
-	// }
+	if err != nil {
+		log.Printf("Could not get all the reviews\n%+v\n", err)
+		return nil
+	}
 
-	// return &result
+	defer rows.Close()
+	for rows.Next() {
+		var review FlatFeedback
+		err = rows.StructScan(&review)
+		if err != nil {
+			log.Print(err)
+		}
+		results = append(results, review)
+	}
+
+	if results == nil {
+		results = make([]FlatFeedback, 0)
+	}
+
+	return results
+}
+
+func (rs *ReviewService) updateFeedback(updatedReview *FlatFeedback) error {
+	_, err := rs.db.Exec(`
+		update reviews_feedback
+			set message=$1
+			where id=$2
+	`, updatedReview.Message.String, updatedReview.ID)
+	if err != nil {
+		log.Printf("Error updating feedback \n%+v\n", err)
+		return err
+	}
 	return nil
+}
+
+func (rs *ReviewService) getFeedbackForReviewer(userID, idToUpdate string) *FlatFeedback {
+	var results FlatFeedback
+	rows, err := rs.db.Queryx(`
+		select fb.id as "id",
+					 r.id as "reviewid",
+					 fb.reviewerid as "reviewerid",
+					 r.userid as "userid",
+					 u.username as "username",
+					 u.name as "name",
+					 fb.*
+			from reviews r
+			join users u on u.id = r.userid
+			join reviews_feedback fb on fb.reviewid = r.id
+			where fb.reviewerid = $1 and r.isactive = true and fb.id = $2
+	`, userID, idToUpdate)
+
+	if err != nil {
+		log.Printf("Could not get all the reviews\n%+v\n", err)
+		return nil
+	}
+
+	var review FlatFeedback
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.StructScan(&review)
+		if err != nil {
+			log.Print(err)
+		}
+		results = review
+	}
+
+	return &results
 }
 
 func (rs *ReviewService) create(review *Review) error {
@@ -201,7 +272,8 @@ func (rs *ReviewService) updateReview(previous, review *Review) error {
 		_ = tx.Rollback()
 		return errors.New("Cannot remove reviewers on completed performance review")
 	}
-	log.Printf("to add: %+v\n", reviewerToAdd)
+
+	// add anything that was missing
 	for _, val := range reviewerToAdd {
 		_, err := tx.Exec(`
 		insert into reviews_feedback 
@@ -215,7 +287,7 @@ func (rs *ReviewService) updateReview(previous, review *Review) error {
 		}
 	}
 
-	log.Printf("to remove: %+v\n", reviewerToRemove)
+	// remove anything we identified to remove
 	for _, val := range reviewerToRemove {
 		_, err := tx.Exec(`
 			delete from reviews_feedback 
@@ -243,17 +315,6 @@ func max(x, y int) int {
 		return y
 	}
 	return x
-}
-
-func (rs *ReviewService) delete(id int64) error {
-	// _, err := u.db.Exec(`
-	// 	DELETE FROM users WHERE ID = $1
-	// `, id)
-	// if err != nil {
-	// 	log.Printf("Error deleting user \n%+v\n", err)
-	// 	return err
-	// }
-	return nil
 }
 
 func (rs *ReviewService) Start(db *sqlx.DB) {

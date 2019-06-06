@@ -1,13 +1,14 @@
 - [x] login with basic user/admin
 - [x] different UI for admin/user
 - [x] User CRUD for admin
+- [x] Perf. Review CRUD for admin
+- [x] Perf. Review CRUD for user
+- [x] better loading indicator for the suspense
+- [x] make sure mobile looks ok
 - [ ] database interfaces instead of going straight to postgresql (or use docker?)
-- [X] Perf. Review CRUD for admin
-- [ ] Perf. Review CRUD for user
 - [ ] Return pending feedback count
 - [ ] proptypes
 - [ ] tests
-- [ ] make sure mobile looks ok
 - [ ] review Instructions.md
 - [ ] review/cleanup DESIGN.md
 - [ ] add a notes/compromises.md file to allow for longer explanations if necessary?

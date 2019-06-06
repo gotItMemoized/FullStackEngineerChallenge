@@ -1,6 +1,8 @@
 import React from 'react';
 import useFormInput from '../hooks/useFormInput';
 import useFormCheckbox from '../hooks/useFormCheckbox';
+import Message from './message';
+import { showIf } from '../render';
 
 export default ({ error, user = {}, submit = () => {} }) => {
   const username = useFormInput(user.username);
@@ -31,16 +33,12 @@ export default ({ error, user = {}, submit = () => {} }) => {
     }
   };
 
-  const passwordWarning =
-    !user.id || newPassword.value <= 0 ? (
-      React.Fragment
-    ) : (
-      <article className="message is-warning">
-        <div className="message-body">
-          This is a password for a current user, be careful when editing
-        </div>
-      </article>
-    );
+  const passwordWarning = showIf(
+    !(!user.id || newPassword.value <= 0),
+    <Message className="is-warning">
+      This is a password for a current user, be careful when editing
+    </Message>,
+  );
 
   return (
     <div>

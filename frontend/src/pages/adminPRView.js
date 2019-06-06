@@ -1,6 +1,6 @@
 import React from 'react';
 import { Redirect } from 'react-router-dom';
-import PerformanceReviewEditor from '../containers/performanceReviewEditor';
+import PerformanceReviewViewer from '../containers/performanceReviewViewer';
 import { SectionContent } from '../components';
 
 export default ({ match }) => {
@@ -11,8 +11,8 @@ export default ({ match }) => {
   return (
     <section className="hero is-light is-bold is-fullheight-with-navbar">
       <SectionContent>
-        <h1 className="title">Edit Performance Review</h1>
-        <PerformanceReviewEditor reviewId={id} />
+        <h1 className="title">View Performance Review</h1>
+        <PerformanceReviewViewer reviewId={id} />
       </SectionContent>
     </section>
   );

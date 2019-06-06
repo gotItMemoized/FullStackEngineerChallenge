@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Columns, Column } from '../components';
 import { Link } from 'react-router-dom';
-import { get, deleteUser } from '../api';
+import { get } from '../api';
+import { showIf } from '../render';
 
 const ReviewTable = ({ reviews = [] }) => {
   const headerFooter = (
     <tr>
       <th>Name</th>
-      <th>Complete</th>
+      <th>Responses</th>
       <th>Edit</th>
     </tr>
   );
@@ -15,7 +16,17 @@ const ReviewTable = ({ reviews = [] }) => {
     return (
       <tr key={review.id}>
         <td>{review.user.name + ' '}</td>
-        <td>{!review.isActive ? 'Completed' : ''}</td>
+        <td>
+          {showIf(
+            !review.isActive,
+            <Link
+              className="button is-primary is-outlined is-small"
+              to={`/performance-manager/${review.id}/view`}
+            >
+              View
+            </Link>,
+          )}
+        </td>
         <td>
           <Link className="button is-small" to={`/performance-manager/${review.id}/edit`}>
             Edit
@@ -34,7 +45,7 @@ const ReviewTable = ({ reviews = [] }) => {
   );
 };
 
-export default ({}) => {
+export default () => {
   const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
@@ -55,7 +66,9 @@ export default ({}) => {
         </Column>
       </Columns>
       <Columns>
-        <ReviewTable reviews={reviews} />
+        <Column>
+          <ReviewTable reviews={reviews} />
+        </Column>
       </Columns>
     </div>
   );

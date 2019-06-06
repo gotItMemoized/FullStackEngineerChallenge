@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { showIf } from '../render';
+import { userDefault } from '../App';
 
-export default function({ currentUser, logoutAction }) {
+export default function({ currentUser = userDefault, logoutAction }) {
+  const [showMenu, setShowMenu] = useState(false);
+
   const sections = () => {
+    if (!currentUser.loggedIn) return
     const links = [];
     if (currentUser.isAdmin) {
       links.push(
@@ -11,7 +16,7 @@ export default function({ currentUser, logoutAction }) {
         </NavLink>,
       );
     }
-
+    
     links.push(
       <NavLink key="performance" to="/performance" className="navbar-item">
         Performance Reviews
@@ -47,6 +52,9 @@ export default function({ currentUser, logoutAction }) {
           aria-label="menu"
           aria-expanded="false"
           data-target="navbarBasicExample"
+          onClick={() => {
+            setShowMenu(!showMenu);
+          }}
         >
           <span aria-hidden="true" />
           <span aria-hidden="true" />
@@ -54,7 +62,7 @@ export default function({ currentUser, logoutAction }) {
         </button>
       </div>
 
-      <div id="navbarBasic" className="navbar-menu">
+      <div id="navbarBasic" className={`navbar-menu ${showIf(showMenu, 'is-active')}`}>
         {sections()}
 
         {userControls()}

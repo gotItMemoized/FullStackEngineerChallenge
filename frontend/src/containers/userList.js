@@ -86,11 +86,10 @@ export default ({ currentUser }) => {
   const deleteAction = userId => {
     deleteUser(userId)
       .then(resp => {
-        console.log(resp);
         setUsers(users.filter(u => u.id !== userId));
       })
       .catch(err => {
-        console.log('err', err);
+        // TODO: error view?
       });
   };
 

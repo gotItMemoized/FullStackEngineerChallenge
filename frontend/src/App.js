@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { HashRouter, Route, Redirect, Switch } from 'react-router-dom';
-import { Login } from './pages';
+import { Login, Loading } from './pages';
+import Header from './containers/header';
 import useLocalStorage from 'react-use-localstorage';
 import './App.scss';
 
@@ -14,112 +15,120 @@ const AdminPerformanceSelector = lazy(() => import('./pages/adminPRSelection'));
 const AdminPerformanceManager = lazy(() => import('./pages/adminPRManager'));
 const AdminPerformanceNew = lazy(() => import('./pages/adminPRNew'));
 const AdminPerformanceEdit = lazy(() => import('./pages/adminPREdit'));
+const AdminPerformanceView = lazy(() => import('./pages/adminPRView'));
+const PerformanceReviews = lazy(() => import('./pages/performanceReviews'));
+const PerformanceReview = lazy(() => import('./pages/performanceReview'));
+const NotFound = lazy(() => import('./pages/notFound'));
+
+export const userDefault = { isAdmin: false, loggedIn: false };
 
 const App = () => {
-  const [user, setUser] = useLocalStorage(
-    'jwt_token',
-    JSON.stringify({ isAdmin: false, loggedIn: false }),
-  );
-  let routes;
+  const [user, setUser] = useLocalStorage('jwt_token', JSON.stringify(userDefault));
+  let routes = [];
 
-  const setStringedUser = u => setUser(JSON.stringify(u));
+  const setStringedUser = u => setUser(JSON.stringify(u || userDefault));
   const parsedUser = JSON.parse(user);
 
   // an improvement we can make here is to hit a `/user/me` endpoint
-  // in order to validate our token is valid before we make a determination
-  //  on if they're admin or not. our api endpoints will always do the validation on request though
+  // in order to validate if our token/permissions is valid before we do any routing
+  // Regardless, the api endpoints will always do the validation on request
 
   if (parsedUser && parsedUser.loggedIn === true) {
+    // common header, match to all pages
+    routes.push(
+      <Route
+        key="*"
+        path="*"
+        component={() => <Header user={parsedUser} setUser={setStringedUser} />}
+      />,
+    );
+    let viewPages = [];
     if (parsedUser.isAdmin) {
-      routes = (
-        <div>
-          <Route
-            exact
-            path="/"
-            component={() => <AdminHome user={parsedUser} setUser={setStringedUser} />}
-          />
-          <Route
-            exact
-            path="/users"
-            component={() => <Users user={parsedUser} setUser={setStringedUser} />}
-          />
-          <Route
-            exact
-            path="/users/new"
-            component={() => <NewUser currentUser={parsedUser} setCurrentUser={setStringedUser} />}
-          />
-          <Route
-            exact
-            path="/users/:id/edit"
-            component={props => (
-              <EditUser currentUser={parsedUser} setCurrentUser={setStringedUser} {...props} />
-            )}
-          />
-          <Route
-            exact
-            path="/performance"
-            component={() => (
-              <AdminPerformanceSelector currentUser={parsedUser} setCurrentUser={setStringedUser} />
-            )}
-          />
-          <Route
-            exact
-            path="/performance-manager"
-            component={() => (
-              <AdminPerformanceManager currentUser={parsedUser} setCurrentUser={setStringedUser} />
-            )}
-          />
-          <Route
-            exact
-            path="/performance-manager/new"
-            component={() => (
-              <AdminPerformanceNew currentUser={parsedUser} setCurrentUser={setStringedUser} />
-            )}
-          />
-          <Route
-            exact
-            path="/performance-manager/:id/edit"
-            component={props => (
-              <AdminPerformanceEdit
-                currentUser={parsedUser}
-                setCurrentUser={setStringedUser}
-                {...props}
-              />
-            )}
-          />
-          <Route path="/login" component={() => <Redirect to="/" />} />
-        </div>
+      // Admin only routes
+      viewPages.push(
+        <Route exact key="/" path="/" component={AdminHome} />,
+        <Route exact path="/users" key="/users" component={() => <Users user={parsedUser} />} />,
+        <Route exact key="/users/new" path="/users/new" component={NewUser} />,
+        <Route exact key="/users/:id/edit" path="/users/:id/edit" component={EditUser} />,
+        <Route exact key="/performance" path="/performance" component={AdminPerformanceSelector} />,
+        <Route
+          exact
+          key="/performance-manager"
+          path="/performance-manager"
+          component={AdminPerformanceManager}
+        />,
+        <Route
+          exact
+          key="/performance-manager/new"
+          path="/performance-manager/new"
+          component={AdminPerformanceNew}
+        />,
+        <Route
+          exact
+          key="/performance-manager/:id/edit"
+          path="/performance-manager/:id/edit"
+          component={AdminPerformanceEdit}
+        />,
+        <Route
+          exact
+          key="/performance-manager/:id/view"
+          path="/performance-manager/:id/view"
+          component={AdminPerformanceView}
+        />,
       );
     } else {
-      routes = (
-        <div>
-          <Route
-            exact
-            path="/"
-            component={() => <UserHome user={parsedUser} setUser={setStringedUser} />}
-          />
-          <Route path="/login" component={() => <Redirect to="/" />} />
-        </div>
+      // regular user only routes
+      viewPages.push(
+        <Route exact key="/" path="/" component={UserHome} />,
+        <Route
+          key="/performance"
+          path="/performance"
+          component={() => <Redirect to="/performance-reviews" />}
+        />,
       );
     }
+    // common user/admin routes
+    viewPages.push(
+      <Route
+        exact
+        key="/performance-reviews"
+        path="/performance-reviews"
+        component={PerformanceReviews}
+      />,
+      <Route
+        exact
+        key="/performance-reviews/:id"
+        path="/performance-reviews/:id"
+        component={PerformanceReview}
+      />,
+      <Route key="/login" path="/login" component={() => <Redirect to="/" />} />,
+    );
+
+    routes.push(
+      <Switch key="pageOr404">
+        {viewPages}
+        <Route key="404" path="*" exact={true} component={NotFound} />,
+      </Switch>,
+    );
   } else {
-    routes = (
-      <div>
-        <Switch>
-          <Route
-            exact
-            path="/login"
-            component={() => <Login user={parsedUser} setUser={setStringedUser} />}
-          />
-          <Redirect to="/login" />
-        </Switch>
-      </div>
+    // route if you're not logged in :)
+    routes.push(
+      <Switch key="/login">
+        <Route
+          exact
+          path="/login"
+          component={() => <Login user={parsedUser} setUser={setStringedUser} />}
+        />
+        <Redirect to="/login" />
+      </Switch>,
     );
   }
   return (
     <div className="App">
       <HashRouter>
-        <Suspense fallback={'loading'}>{routes}</Suspense>
+        <Suspense fallback={<Loading user={parsedUser} setUser={setStringedUser} />}>
+          {routes}
+        </Suspense>
       </HashRouter>
     </div>
   );

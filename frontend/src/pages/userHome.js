@@ -1,17 +1,20 @@
 import React from 'react';
-import Header from '../containers/header';
+import { SectionContent, Columns, Column } from '../components';
+import { Link } from 'react-router-dom';
 
-export default ({ user, setUser }) => {
+export default () => {
   return (
-    <div>
-      <Header user={user} setUser={setUser} />
-      <section className="hero is-light is-bold is-fullheight-with-navbar">
-        <div className="section">
-          <div className="container">
-            <h1 className="title">User Home</h1>
-          </div>
-        </div>
-      </section>
-    </div>
+    <section className="hero is-light is-bold is-fullheight-with-navbar">
+      <SectionContent>
+        <h1 className="title">User Home</h1>
+        <Columns className="is-hidden-desktop">
+          <Column>
+            <Link className="button is-primary" to="/performance-reviews">
+              Performance Reviews
+            </Link>
+          </Column>
+        </Columns>
+      </SectionContent>
+    </section>
   );
 };

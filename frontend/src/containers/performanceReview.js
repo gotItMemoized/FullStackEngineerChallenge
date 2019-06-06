@@ -1,26 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import UserEditForm from '../components/userEditForm';
+import PerformanceReviewForm from '../components/performanceReviewForm';
 import { Redirect } from 'react-router-dom';
 import { get, post } from '../api';
 
-export default ({ userId }) => {
-  const [user, setUser] = useState();
+export default ({ reviewId }) => {
+  const [review, setReview] = useState();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState();
 
   useEffect(() => {
     const fetchData = async () => {
-      const result = await get(`/user/${userId}`);
-      setUser(result.data);
+      const result = await get(`/feedback/${reviewId}`);
+      const converted = {
+        ...result.data,
+        message: result.data.message.String,
+      };
+      setReview(converted);
     };
-    if (userId) {
+    if (reviewId) {
       fetchData();
     }
-  }, [userId]);
+  }, [reviewId]);
 
-  const submit = userData => {
-    let url = userId ? `/user/${userId}` : '/user';
-    post(url, userData)
+  const submit = reviewData => {
+    post(`/feedback/${reviewId}`, reviewData)
       .then(response => {
         setSubmitted(true);
         // then redirect back to list
@@ -32,8 +35,8 @@ export default ({ userId }) => {
   };
 
   return submitted ? (
-    <Redirect to="/users" />
+    <Redirect to="/performance-reviews" />
   ) : (
-    <UserEditForm user={user} error={error} submit={submit} />
+    <PerformanceReviewForm review={review} error={error} submit={submit} />
   );
 };
