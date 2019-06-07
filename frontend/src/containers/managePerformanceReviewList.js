@@ -47,11 +47,13 @@ const ReviewTable = ({ reviews = [] }) => {
 
 export default () => {
   const [reviews, setReviews] = useState([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       const result = await get('/review/all');
       setReviews(result.data);
+      setLoaded(true);
     };
     fetchData();
   }, []);
@@ -67,7 +69,9 @@ export default () => {
       </Columns>
       <Columns>
         <Column>
-          <ReviewTable reviews={reviews} />
+          {showIf(reviews.length > 0, <ReviewTable reviews={reviews} />)}
+          {showIf(reviews.length === 0 && loaded, <div>No performance reviews created.</div>)}
+          {showIf(!loaded, <div>Loading</div>)}
         </Column>
       </Columns>
     </div>

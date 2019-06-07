@@ -7,17 +7,16 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/jwtauth"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
-type ReviewService struct {
-	db *sqlx.DB
+type ReviewHandler struct {
+	Data Data
 }
 
-func (rs *ReviewService) All(w http.ResponseWriter, r *http.Request) {
+func (rs *ReviewHandler) All(w http.ResponseWriter, r *http.Request) {
 
-	reviews := rs.getAllReviews()
+	reviews := rs.Data.getAllReviews()
 
 	if reviews == nil {
 		http.Error(w, "[]", http.StatusNotFound)
@@ -27,9 +26,9 @@ func (rs *ReviewService) All(w http.ResponseWriter, r *http.Request) {
 	writeToOutput(w, reviews)
 }
 
-func (rs *ReviewService) Get(w http.ResponseWriter, r *http.Request) {
+func (rs *ReviewHandler) Get(w http.ResponseWriter, r *http.Request) {
 	reviewID := chi.URLParam(r, "id")
-	review := rs.getReviewById(reviewID)
+	review := rs.Data.getReviewById(reviewID)
 
 	if review == nil {
 		http.Error(w, "Not found", http.StatusNotFound)
@@ -39,7 +38,7 @@ func (rs *ReviewService) Get(w http.ResponseWriter, r *http.Request) {
 	writeToOutput(w, review)
 }
 
-func (rs *ReviewService) Create(w http.ResponseWriter, r *http.Request) {
+func (rs *ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 	var review Review
@@ -56,8 +55,6 @@ func (rs *ReviewService) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: check for existing active performance reviews for this user
-
 	review.UserID = review.User.ID
 	for ind, feedback := range review.Feedback {
 		if len(feedback.Reviewer.ID) == 0 {
@@ -69,7 +66,7 @@ func (rs *ReviewService) Create(w http.ResponseWriter, r *http.Request) {
 		review.Feedback[ind] = feedback
 	}
 
-	err = rs.create(&review)
+	err = rs.Data.create(&review)
 	if err != nil {
 		log.Print(errors.Wrap(err, "Could not save performance review"))
 		http.Error(w, "Error creating performance review", http.StatusBadRequest)
@@ -81,7 +78,7 @@ func (rs *ReviewService) Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (rs *ReviewService) Update(w http.ResponseWriter, r *http.Request) {
+func (rs *ReviewHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idToUpdate := chi.URLParam(r, "id")
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
@@ -94,20 +91,14 @@ func (rs *ReviewService) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	updatedReview.ID = idToUpdate
 
-	existingReview := rs.getReviewById(idToUpdate)
+	existingReview := rs.Data.getReviewById(idToUpdate)
 	if existingReview == nil {
 		log.Print(errors.Wrap(err, "Could not update review"))
 		http.Error(w, "Could not update review", http.StatusNotFound)
 		return
 	}
 
-	if existingReview.User.ID != updatedReview.User.ID {
-		log.Print(errors.New("Trieid to change the target reviewee"))
-		http.Error(w, "Could not update review", http.StatusBadRequest)
-		return
-	}
-
-	err = rs.updateReview(existingReview, &updatedReview)
+	err = rs.Data.updateReview(existingReview, &updatedReview)
 	if err != nil {
 		log.Print(errors.Wrap(err, "Could not update review"))
 		http.Error(w, "Could not update review", http.StatusInternalServerError)
@@ -117,14 +108,14 @@ func (rs *ReviewService) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (rs *ReviewService) GetPendingFeedbackForReviewer(w http.ResponseWriter, r *http.Request) {
+func (rs *ReviewHandler) GetPendingFeedbackForReviewer(w http.ResponseWriter, r *http.Request) {
 	_, claims, _ := jwtauth.FromContext(r.Context())
 	userID := claims["id"].(string)
 	if len(userID) == 0 {
 		http.Error(w, "Could not confirm user", http.StatusUnauthorized)
 		return
 	}
-	reviews := rs.getAllFeedbackForReviewer(userID)
+	reviews := rs.Data.getAllFeedbackForReviewer(userID)
 
 	if reviews == nil {
 		http.Error(w, "[]", http.StatusNotFound)
@@ -134,7 +125,7 @@ func (rs *ReviewService) GetPendingFeedbackForReviewer(w http.ResponseWriter, r 
 	writeToOutput(w, reviews)
 }
 
-func (rs *ReviewService) GetFeedback(w http.ResponseWriter, r *http.Request) {
+func (rs *ReviewHandler) GetFeedback(w http.ResponseWriter, r *http.Request) {
 	feedbackID := chi.URLParam(r, "id")
 	_, claims, _ := jwtauth.FromContext(r.Context())
 	userID := claims["id"].(string)
@@ -142,7 +133,7 @@ func (rs *ReviewService) GetFeedback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not confirm user", http.StatusUnauthorized)
 		return
 	}
-	feedback := rs.getFeedbackForReviewer(userID, feedbackID)
+	feedback := rs.Data.getFeedbackForReviewer(userID, feedbackID)
 
 	if feedback == nil {
 		http.Error(w, "Not found", http.StatusNotFound)
@@ -152,7 +143,7 @@ func (rs *ReviewService) GetFeedback(w http.ResponseWriter, r *http.Request) {
 	writeToOutput(w, feedback)
 }
 
-func (rs *ReviewService) GiveFeedback(w http.ResponseWriter, r *http.Request) {
+func (rs *ReviewHandler) GiveFeedback(w http.ResponseWriter, r *http.Request) {
 	idToUpdate := chi.URLParam(r, "id")
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
@@ -178,14 +169,14 @@ func (rs *ReviewService) GiveFeedback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingReview := rs.getFeedbackForReviewer(userID, idToUpdate)
+	existingReview := rs.Data.getFeedbackForReviewer(userID, idToUpdate)
 	if existingReview == nil {
 		log.Print(errors.Wrap(err, "Could not update feedback"))
 		http.Error(w, "Could not update feedback", http.StatusNotFound)
 		return
 	}
 
-	err = rs.updateFeedback(&updatedReview)
+	err = rs.Data.updateFeedback(&updatedReview)
 	if err != nil {
 		log.Print(errors.Wrap(err, "Could not update review"))
 		http.Error(w, "Could not update review", http.StatusInternalServerError)

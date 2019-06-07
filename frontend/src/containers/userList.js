@@ -85,7 +85,7 @@ export default ({ currentUser }) => {
 
   const deleteAction = userId => {
     deleteUser(userId)
-      .then(resp => {
+      .then(() => {
         setUsers(users.filter(u => u.id !== userId));
       })
       .catch(err => {

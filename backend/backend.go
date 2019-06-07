@@ -26,12 +26,13 @@ import (
 var tokenAuth *jwtauth.JWTAuth
 
 // flags
-var resetDatabase, seedDatabase *bool
+var resetDatabase, seedDatabase, usePostgres *bool
 
 func init() {
 	// set up flags
-	resetDatabase = flag.Bool("resetDatabase", false, "reset the dev database")
+	resetDatabase = flag.Bool("resetPostgres", false, "reset the dev database")
 	seedDatabase = flag.Bool("seedDatabase", false, "seed the dev database")
+	usePostgres = flag.Bool("usePostgres", false, "use a postgres database")
 	flag.Parse()
 
 	// set up JWT auth
@@ -47,8 +48,8 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	userService := &user.UserService{}
-	reviewService := &pr.ReviewService{}
+	userHandler := &user.UserHandler{Auth: tokenAuth}
+	reviewHandler := &pr.ReviewHandler{}
 
 	// this just lets us safely ctrl-c out of the app while running easily
 	// runs in a goroutine and just listens for an interrupt
@@ -56,75 +57,29 @@ func main() {
 		sig := <-sigs
 		log.Println(sig)
 		log.Println("Shutting down")
-		userService.Stop()
-		reviewService.Stop()
+		userHandler.Data.Stop()
+		reviewHandler.Data.Stop()
 		os.Exit(0)
 	}()
 
-	// TODO: swap this whole bit out for setting up an interface
-	log.Println("Connecting to database")
-	// You'd want to replace this with an env variable for prod, and use SSL
-	connStr := "dbname=paypay sslmode=disable"
-	db, err := sqlx.Open("postgres", connStr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(" - Success")
+	// setup the services
+	us, rs := setupServices()
+	userHandler.Data = *us
+	reviewHandler.Data = *rs
 
-	// database set up based on flag
-	if (*resetDatabase) && os.Getenv("ENV") == "DEV" {
-		log.Println("Resetting database")
-		// load the .sql files
-		clearFile, err := ioutil.ReadFile("./sql/clear.sql")
-		if err != nil {
-			log.Fatal(err)
-		}
-		initFile, err := ioutil.ReadFile("./sql/init.sql")
-		if err != nil {
-			log.Fatal(err)
-		}
-		// run the .sql files
-		_, err = db.Exec(string(clearFile))
-		if err != nil {
-			log.Fatal(err)
-		}
-		_, err = db.Exec(string(initFile))
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println(" - Success")
-	}
-
-	// seed with initial data if we have the seedDatabase flag
-	if (*seedDatabase) && os.Getenv("ENV") == "DEV" {
-		log.Println("Seeding database")
-		// load the sql file
-		seedFile, err := ioutil.ReadFile("./sql/seed.sql")
-		if err != nil {
-			log.Fatal(err)
-		}
-		// run it
-		_, err = db.Exec(string(seedFile))
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println(" - Success")
-	}
-
-	// setup the service
-	userService.Start(db, tokenAuth)
-	reviewService.Start(db)
+	userHandler.Data.Start()
+	reviewHandler.Data.Start()
 
 	// set up api routes
-	router := getRouter(tokenAuth, userService, reviewService)
+	router := getRouter(tokenAuth, userHandler, reviewHandler)
 	// serve http routes, you'd want to set up local certs and https for security though
-	err = http.ListenAndServe(":8000", router)
+	err := http.ListenAndServe(":8000", router)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService, reviewService *pr.ReviewService) http.Handler {
+func getRouter(auth *jwtauth.JWTAuth, userHandler *user.UserHandler, reviewHandler *pr.ReviewHandler) http.Handler {
 	r := chi.NewRouter()
 
 	// A good base middleware stack
@@ -138,20 +93,20 @@ func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService, reviewServi
 	}
 
 	r.Route("/user", func(r chi.Router) {
-		r.Post("/login", userService.Login)
+		r.Post("/login", userHandler.Login)
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(jwtauth.Authenticator)
-			r.Get("/all", userService.All)
-			r.Get("/{id}", userService.Get)
+			r.Get("/all", userHandler.All)
+			r.Get("/{id}", userHandler.Get)
 		})
 		// admin only stuff
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(adminAuthenticator)
-			r.Post("/{id}", userService.Update)
-			r.Delete("/{id}", userService.Delete)
-			r.Post("/", userService.Create)
+			r.Post("/{id}", userHandler.Update)
+			r.Delete("/{id}", userHandler.Delete)
+			r.Post("/", userHandler.Create)
 		})
 	})
 
@@ -159,16 +114,16 @@ func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService, reviewServi
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(jwtauth.Authenticator)
-			r.Get("/{id}", reviewService.Get)
+			r.Get("/{id}", reviewHandler.Get)
 		})
 
 		// admin only stuff
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(adminAuthenticator)
-			r.Get("/all", reviewService.All)
-			r.Post("/{id}", reviewService.Update)
-			r.Post("/", reviewService.Create)
+			r.Get("/all", reviewHandler.All)
+			r.Post("/{id}", reviewHandler.Update)
+			r.Post("/", reviewHandler.Create)
 		})
 	})
 
@@ -176,9 +131,9 @@ func getRouter(auth *jwtauth.JWTAuth, userService *user.UserService, reviewServi
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(jwtauth.Authenticator)
-			r.Get("/all", reviewService.GetPendingFeedbackForReviewer)
-			r.Get("/{id}", reviewService.GetFeedback)
-			r.Post("/{id}", reviewService.GiveFeedback)
+			r.Get("/all", reviewHandler.GetPendingFeedbackForReviewer)
+			r.Get("/{id}", reviewHandler.GetFeedback)
+			r.Post("/{id}", reviewHandler.GiveFeedback)
 		})
 	})
 
@@ -204,4 +159,80 @@ func adminAuthenticator(next http.Handler) http.Handler {
 		// Token is authenticated, pass it through
 		next.ServeHTTP(w, r)
 	})
+}
+
+//
+func setupServices() (*user.Data, *pr.Data) {
+	var userData user.Data
+	var reviewData pr.Data
+	if *usePostgres {
+		log.Println("Connecting to database")
+		pqConn := os.Getenv("POSTGRES_CONNECTION")
+		var connStr string
+		if len(pqConn) != 0 {
+			connStr = pqConn
+		} else {
+			log.Println("Connection string not found, using default")
+			// You'd want to replace this with an env variable for prod, and use SSL
+			connStr = "dbname=paypay sslmode=disable"
+		}
+		db, err := sqlx.Open("postgres", connStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println(" - Success")
+
+		// database set up based on flag
+		if (*resetDatabase) && os.Getenv("ENV") == "DEV" {
+			log.Println("Resetting database")
+			// load the .sql files
+			clearFile, err := ioutil.ReadFile("./sql/clear.sql")
+			if err != nil {
+				log.Fatal(err)
+			}
+			initFile, err := ioutil.ReadFile("./sql/init.sql")
+			if err != nil {
+				log.Fatal(err)
+			}
+			// run the .sql files
+			_, err = db.Exec(string(clearFile))
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = db.Exec(string(initFile))
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Println(" - Success")
+		}
+
+		// seed with initial data if we have the seedDatabase flag
+		if (*seedDatabase) && os.Getenv("ENV") == "DEV" {
+			log.Println("Seeding database")
+			// load the sql file
+			seedFile, err := ioutil.ReadFile("./sql/seed.sql")
+			if err != nil {
+				log.Fatal(err)
+			}
+			// run it
+			_, err = db.Exec(string(seedFile))
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Println(" - Success")
+		}
+		userData = &user.SqlData{DB: db}
+		reviewData = &pr.SqlData{DB: db}
+	} else {
+		log.Println("Setting up an in-memory database")
+		us := &user.MapData{Seed: true}
+		userData = us
+		reviewData = &pr.MapData{UserData: us}
+		log.Println(" - Success")
+	}
+
+	if userData == nil || reviewData == nil {
+		log.Fatal("Could not start up without services")
+	}
+	return &userData, &reviewData
 }

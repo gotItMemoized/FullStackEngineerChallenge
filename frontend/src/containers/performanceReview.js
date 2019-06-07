@@ -24,7 +24,7 @@ export default ({ reviewId }) => {
 
   const submit = reviewData => {
     post(`/feedback/${reviewId}`, reviewData)
-      .then(response => {
+      .then(() => {
         setSubmitted(true);
         // then redirect back to list
       })

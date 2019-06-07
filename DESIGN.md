@@ -12,7 +12,7 @@ Taking advantage of create-react-app as it provides a lot of features out of the
 
 Writing the backend in golang. Sorry if there's any issue with getting golang set up on your machine. Since I'm using modules it should be a little bit easier, but it can be a little quirky to set up. I'm much more familiar with it for writing backend services from nothing. Ruby-On-Rails in api mode would possibly be much easier, but not as fun to talk about in an interview.
 
-I'm making an assumption that there's going to initially always be an admin and a user. This will be set up with the `-setupDatabase -seedDatabase` flags (can see more in the README.md on how to use).
+I'm making an assumption that there's going to initially always be an admin and a user. This will be set up with the `-resetPostgres -seedDatabase` flags (can see more in the README.md on how to use).
 
 ### Auth
 
@@ -62,3 +62,33 @@ Using postgresql and taking advantage of sql and sqlx packages for golang.
 As mentioned in the Auth section. I'm omitting some security things like refresh tokens. So there's no additional table for that. I'm also omitting timestamps (create, update, etc) from the tables for the sake of simplicity, but it'd be important to have in a real application.
 
 Assigning a performance review can be added and deleted at any point. This can be a desired feature, but this current design doesn't allow for logical deletes. Logical deletes would allow you to delete, and undelete an item. This prevents you from losing the feedback message from the assigned user.
+
+### Known issues / Compromises / Notes / Assumptions
+
+- App is running in `DEV` mode in the containers and are not set up to build for production
+- SSL/HTTPS not setup
+- postman/newman api tests have hardcoded tokens that'll expire in like... 2 years
+- postman/newman api tests require clean database (`-resetPostgres -seedDatabase`)
+- JWT tokens expire in 2 years rather than in 15 minutes. There's no refresh token mechanism.
+- Default user/pass should be dev only and need a mechanism to have an initial admin for prod (where it forces you to change the password)
+- Admins set the passwords for the users
+- Users cannot change the passwords
+- Not enough unit tests
+- No pagination on the `/all` calls. This would be very bad for large datasets
+- If someone submits feedback, and the admin removes them from the performance review, saves, and adds the user back. The users feedback is no longer available. (need soft deleting or do not allow feedback to be removed if already provided)
+- when using inmemory database deleting user does not delete users in feedback/reviews (no cascading deletes)
+- frontend doesn't give any good user feedback when it cannot connect to the backend.
+
+### Feature Ideas
+
+Ideas of things that could be added if given more time.
+
+- autoclose the performance review once all of the user feedback is in.
+- admin user creation gives a invite code instead of setting the user password.
+- typescript
+- a11y linting
+- precommit hooks for linters, formatters, tests
+- regular users can change their own passwords
+- proper pagination for get all users/performance reviews/feedback
+- access codes for a specific reviewer/review
+- redis cache?

@@ -53,7 +53,7 @@ export default ({ currentUser, reviewId }) => {
   const submit = reviewData => {
     let url = reviewId ? `/review/${reviewId}` : '/review';
     post(url, reviewData)
-      .then(response => {
+      .then(() => {
         setSubmitted(true);
         // then redirect back to list
       })

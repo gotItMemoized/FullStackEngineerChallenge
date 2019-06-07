@@ -21,7 +21,7 @@ export default ({ userId }) => {
   const submit = userData => {
     let url = userId ? `/user/${userId}` : '/user';
     post(url, userData)
-      .then(response => {
+      .then(() => {
         setSubmitted(true);
         // then redirect back to list
       })

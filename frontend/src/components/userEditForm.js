@@ -28,7 +28,7 @@ export default ({ error, user = {}, submit = () => {} }) => {
         name: name.value,
         username: username.value,
         newPassword: newPassword.value,
-        isAdmin: isAdmin.value,
+        isAdmin: isAdmin.checked,
       });
     }
   };

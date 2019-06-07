@@ -1,7 +1,6 @@
 package pr
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 
@@ -9,9 +8,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (rs *ReviewService) getAllReviews() []Review {
+type SqlData struct {
+	DB *sqlx.DB
+}
+
+func (rs *SqlData) getAllReviews() []Review {
 	var results []Review
-	rows, err := rs.db.Queryx(`
+	rows, err := rs.DB.Queryx(`
 		select r.*,
 					 u.id as "user.id",
 					 u.name as "user.name"
@@ -41,14 +44,14 @@ func (rs *ReviewService) getAllReviews() []Review {
 	return results
 }
 
-func (rs *ReviewService) getReviewById(reviewId string) *Review {
+func (rs *SqlData) getReviewById(reviewId string) *Review {
 	var result Review
 	pid, err := strconv.ParseInt(reviewId, 10, 64)
 	if err != nil {
 		log.Printf("Couldn't parse int for getting\n%+v\n", err)
 		return nil
 	}
-	rows, err := rs.db.Queryx(`
+	rows, err := rs.DB.Queryx(`
 		select r.*,
 					 u.id as "user.id",
 					 u.name as "user.name",
@@ -75,7 +78,7 @@ func (rs *ReviewService) getReviewById(reviewId string) *Review {
 	}
 	if len(result.ID) != 0 {
 		result.Feedback = []Feedback{}
-		rows2, err := rs.db.Queryx(`
+		rows2, err := rs.DB.Queryx(`
 			select fb.*,
 					u.id as "reviewer.id",
 					u.name as "reviewer.name",
@@ -109,9 +112,9 @@ func (rs *ReviewService) getReviewById(reviewId string) *Review {
 	return &result
 }
 
-func (rs *ReviewService) getAllFeedbackForReviewer(userID string) []FlatFeedback {
+func (rs *SqlData) getAllFeedbackForReviewer(userID string) []FlatFeedback {
 	var results []FlatFeedback
-	rows, err := rs.db.Queryx(`
+	rows, err := rs.DB.Queryx(`
 		select fb.id as "id",
 					 r.id as "reviewid",
 					 fb.reviewerid as "reviewerid",
@@ -147,8 +150,8 @@ func (rs *ReviewService) getAllFeedbackForReviewer(userID string) []FlatFeedback
 	return results
 }
 
-func (rs *ReviewService) updateFeedback(updatedReview *FlatFeedback) error {
-	_, err := rs.db.Exec(`
+func (rs *SqlData) updateFeedback(updatedReview *FlatFeedback) error {
+	_, err := rs.DB.Exec(`
 		update reviews_feedback
 			set message=$1
 			where id=$2
@@ -160,9 +163,9 @@ func (rs *ReviewService) updateFeedback(updatedReview *FlatFeedback) error {
 	return nil
 }
 
-func (rs *ReviewService) getFeedbackForReviewer(userID, idToUpdate string) *FlatFeedback {
+func (rs *SqlData) getFeedbackForReviewer(userID, idToUpdate string) *FlatFeedback {
 	var results FlatFeedback
-	rows, err := rs.db.Queryx(`
+	rows, err := rs.DB.Queryx(`
 		select fb.id as "id",
 					 r.id as "reviewid",
 					 fb.reviewerid as "reviewerid",
@@ -194,38 +197,63 @@ func (rs *ReviewService) getFeedbackForReviewer(userID, idToUpdate string) *Flat
 	return &results
 }
 
-func (rs *ReviewService) create(review *Review) error {
+func (rs *SqlData) create(review *Review) error {
+	tx, err := rs.DB.Beginx()
+	if err != nil {
+		log.Printf("%+v", err)
+		return err
+	}
+
 	m := map[string]interface{}{"userid": review.UserID, "isActive": review.IsActive}
 	sql := `
-		with ids as (
 		insert into reviews
 			(userid, isActive)
 		values
 			(:userid, :isActive)
 		returning id
-		)
 	`
-	if review.Feedback != nil {
-		for ind, feedback := range review.Feedback {
-			sql += fmt.Sprintf(`
-			insert into reviews_feedback(reviewid, reviewerid)
-			select id, :reviewer%v from ids`, ind)
-			m[fmt.Sprintf("reviewer%v", ind)] = feedback.ReviewerID
-		}
-	}
-	_, err := rs.db.NamedExec(sql, m)
-
+	stmt, err := tx.PrepareNamed(sql)
 	if err != nil {
 		log.Printf("%+v", err)
 		return err
 	}
+	result := tx.NamedStmt(stmt)
+	var id int
+	err = result.Get(&id, m)
+	if err != nil {
+		log.Printf("%+v", err)
+		_ = tx.Rollback()
+		return err
+	}
+
+	if review.Feedback != nil {
+		for _, feedback := range review.Feedback {
+			_, err = tx.Exec(`
+			insert into reviews_feedback(reviewid, reviewerid)
+			values ($1, $2)`, id, feedback.Reviewer.ID)
+			if err != nil {
+				break
+			}
+		}
+	}
+
+	if err == nil {
+		err = tx.Commit()
+	}
+
+	if err != nil {
+		_ = tx.Rollback()
+		log.Printf("%+v", err)
+		return err
+	}
+
 	return nil
 }
 
-func (rs *ReviewService) updateReview(previous, review *Review) error {
+func (rs *SqlData) updateReview(previous, review *Review) error {
 	// this one will be gross
 	m := map[string]interface{}{"id": review.ID, "isactive": review.IsActive}
-	tx, err := rs.db.Beginx()
+	tx, err := rs.DB.Beginx()
 	if err != nil {
 		return err
 	}
@@ -242,39 +270,16 @@ func (rs *ReviewService) updateReview(previous, review *Review) error {
 		return err
 	}
 
-	var reviewerToAdd []string
-	var reviewerToRemove []string
-	// We have to determine what needs to be added or deleted
-	feedbackMap := make(map[string]bool, max(len(previous.Feedback), len(review.Feedback)))
-	// first set everything in the map
-	for _, prevFB := range previous.Feedback {
-		feedbackMap[prevFB.ReviewerID] = false
-	}
-	// if it's not in the map, we need to add it else mark it as true
-	for _, newFB := range review.Feedback {
-		_, ok := feedbackMap[newFB.Reviewer.ID]
-		if !ok {
-			reviewerToAdd = append(reviewerToAdd, newFB.Reviewer.ID)
-		} else {
-			feedbackMap[newFB.Reviewer.ID] = true
-		}
-	}
-
-	// anything still false in the map will need to be removed
-	for id, wasFound := range feedbackMap {
-		if !wasFound {
-			reviewerToRemove = append(reviewerToRemove, id)
-		}
-	}
+	addFeedback, removeFeedback := feedbackChanges(previous.Feedback, review.Feedback)
 
 	// disallow removing if inactive
-	if !review.IsActive && len(reviewerToRemove) != 0 {
+	if !review.IsActive && len(removeFeedback) != 0 {
 		_ = tx.Rollback()
 		return errors.New("Cannot remove reviewers on completed performance review")
 	}
 
 	// add anything that was missing
-	for _, val := range reviewerToAdd {
+	for _, val := range addFeedback {
 		_, err := tx.Exec(`
 		insert into reviews_feedback 
             (reviewid, reviewerid) 
@@ -288,7 +293,7 @@ func (rs *ReviewService) updateReview(previous, review *Review) error {
 	}
 
 	// remove anything we identified to remove
-	for _, val := range reviewerToRemove {
+	for _, val := range removeFeedback {
 		_, err := tx.Exec(`
 			delete from reviews_feedback 
       where reviewid = $1 and reviewerid = $2
@@ -310,19 +315,11 @@ func (rs *ReviewService) updateReview(previous, review *Review) error {
 	return nil
 }
 
-func max(x, y int) int {
-	if x < y {
-		return y
-	}
-	return x
+func (rs *SqlData) Start() {
 }
 
-func (rs *ReviewService) Start(db *sqlx.DB) {
-	rs.db = db
-}
-
-func (rs *ReviewService) Stop() {
-	if rs.db != nil {
-		rs.db.Close()
+func (rs *SqlData) Stop() {
+	if rs.DB != nil {
+		rs.DB.Close()
 	}
 }

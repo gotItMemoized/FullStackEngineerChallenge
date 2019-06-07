@@ -9,15 +9,15 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS reviews (
     id serial PRIMARY KEY,
-    userid serial NOT NULL REFERENCES users(id),
+    userid serial NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     isActive BOOLEAN DEFAULT true
 )
 ;
 
 CREATE TABLE IF NOT EXISTS reviews_feedback (
     id serial PRIMARY KEY,
-    reviewid serial NOT NULL REFERENCES reviews(id),
-    reviewerid serial NOT NULL REFERENCES users(id),
+    reviewid serial NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+    reviewerid serial NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     message TEXT
 )
 ;
