@@ -4,7 +4,7 @@ import { showIf } from '../render';
 
 export default ({ review = {} }) => {
   if (!review.feedback) {
-    return <div>Loading...</div>;
+    return <div id="performance-reviews-loading">Loading...</div>;
   }
 
   const responses = review.feedback.map(fb => {
@@ -19,9 +19,15 @@ export default ({ review = {} }) => {
       </Message>
     );
   });
+  const { user } = review;
+  const title = showIf(!!user && !!user.label, () => (
+    <h2 id="performance-review-response-title" className="is-size-5 title">
+      Review of {user.label}
+    </h2>
+  ));
   return (
     <div>
-      <h2 className="is-size-5 title">Review of {review.user.label}</h2>
+      {title}
       <div>{responses}</div>
     </div>
   );

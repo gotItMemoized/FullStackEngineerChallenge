@@ -440,7 +440,7 @@
 				}
 			],
 			"request": {
-				"method": "POST",
+				"method": "PUT",
 				"header": [
 					{
 						"key": "Accept",
@@ -605,18 +605,19 @@
 				{
 					"listen": "test",
 					"script": {
-						"type": "text/javascript",
+						"id": "1fd50e48-7032-4858-960f-208a7f14ebaa",
 						"exec": [
 							"tests[\"Response time is less than 200ms\"] = responseTime < 200;",
 							"",
 							"",
 							"tests[\"Status code is 204\"] = responseCode.code === 204;"
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
 			"request": {
-				"method": "POST",
+				"method": "PUT",
 				"header": [
 					{
 						"key": "Accept",
@@ -770,18 +771,19 @@
 				{
 					"listen": "test",
 					"script": {
-						"type": "text/javascript",
+						"id": "ebe725b7-c988-4169-bf9b-383f0e4f0953",
 						"exec": [
 							"tests[\"Response time is less than 200ms\"] = responseTime < 200;",
 							"",
 							"",
 							"tests[\"Status code is 204\"] = responseCode.code === 204;"
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
 			"request": {
-				"method": "POST",
+				"method": "PUT",
 				"header": [
 					{
 						"key": "Accept",
@@ -833,18 +835,19 @@
 				{
 					"listen": "test",
 					"script": {
-						"type": "text/javascript",
+						"id": "202423ef-0b5b-4ce6-9db0-dd0cf8092e61",
 						"exec": [
 							"tests[\"Response time is less than 200ms\"] = responseTime < 200;",
 							"",
 							"",
 							"tests[\"Status code is 204\"] = responseCode.code === 204;"
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
 			"request": {
-				"method": "POST",
+				"method": "PUT",
 				"header": [
 					{
 						"key": "Accept",
@@ -1048,7 +1051,7 @@
 		{
 			"name": "add test user to PR",
 			"request": {
-				"method": "POST",
+				"method": "PUT",
 				"header": [
 					{
 						"key": "Accept",
@@ -1134,7 +1137,7 @@
 		{
 			"name": "user submitting feedback",
 			"request": {
-				"method": "POST",
+				"method": "PUT",
 				"header": [
 					{
 						"key": "Accept",
@@ -1183,7 +1186,7 @@
 		{
 			"name": "user token doesn't work on admin endpoint",
 			"request": {
-				"method": "POST",
+				"method": "PUT",
 				"header": [
 					{
 						"key": "Accept",
@@ -1246,7 +1249,7 @@
 				}
 			],
 			"request": {
-				"method": "POST",
+				"method": "PUT",
 				"header": [
 					{
 						"key": "Accept",
@@ -1310,7 +1313,7 @@
 				}
 			],
 			"request": {
-				"method": "POST",
+				"method": "PUT",
 				"header": [
 					{
 						"key": "Accept",

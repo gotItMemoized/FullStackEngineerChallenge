@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders children 1`] = `
+<div>
+  <article
+    class="message "
+  >
+    <div
+      class="message-body"
+    >
+      <div
+        id="something"
+      >
+        hello
+      </div>
+    </div>
+  </article>
+</div>
+`;
+
+exports[`renders children 2`] = `
+<div
+  id="something"
+>
+  hello
+</div>
+`;
+
+exports[`renders with classname 1`] = `
+<div>
+  <article
+    class="message test"
+  >
+    <div
+      class="message-body"
+    />
+  </article>
+</div>
+`;
+
+exports[`renders without crashing 1`] = `
+<div>
+  <article
+    class="message "
+  >
+    <div
+      class="message-body"
+    />
+  </article>
+</div>
+`;

@@ -63,7 +63,7 @@ func main() {
 	}()
 
 	// setup the services
-	us, rs := setupServices()
+	us, rs := setupDatasource()
 	userHandler.Data = *us
 	reviewHandler.Data = *rs
 
@@ -104,7 +104,7 @@ func getRouter(auth *jwtauth.JWTAuth, userHandler *user.UserHandler, reviewHandl
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(adminAuthenticator)
-			r.Post("/{id}", userHandler.Update)
+			r.Put("/{id}", userHandler.Update)
 			r.Delete("/{id}", userHandler.Delete)
 			r.Post("/", userHandler.Create)
 		})
@@ -122,7 +122,7 @@ func getRouter(auth *jwtauth.JWTAuth, userHandler *user.UserHandler, reviewHandl
 			r.Use(jwtauth.Verifier(auth))
 			r.Use(adminAuthenticator)
 			r.Get("/all", reviewHandler.All)
-			r.Post("/{id}", reviewHandler.Update)
+			r.Put("/{id}", reviewHandler.Update)
 			r.Post("/", reviewHandler.Create)
 		})
 	})
@@ -133,7 +133,7 @@ func getRouter(auth *jwtauth.JWTAuth, userHandler *user.UserHandler, reviewHandl
 			r.Use(jwtauth.Authenticator)
 			r.Get("/all", reviewHandler.GetPendingFeedbackForReviewer)
 			r.Get("/{id}", reviewHandler.GetFeedback)
-			r.Post("/{id}", reviewHandler.GiveFeedback)
+			r.Put("/{id}", reviewHandler.GiveFeedback)
 		})
 	})
 
@@ -161,8 +161,8 @@ func adminAuthenticator(next http.Handler) http.Handler {
 	})
 }
 
-//
-func setupServices() (*user.Data, *pr.Data) {
+// does the postgres connection or sets up an in-memory 'database'
+func setupDatasource() (*user.Data, *pr.Data) {
 	var userData user.Data
 	var reviewData pr.Data
 	if *usePostgres {

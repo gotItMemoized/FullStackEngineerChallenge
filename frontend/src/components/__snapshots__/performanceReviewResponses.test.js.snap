@@ -1,0 +1,95 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should render loading 1`] = `
+<div>
+  <div
+    id="performance-reviews-loading"
+  >
+    Loading...
+  </div>
+</div>
+`;
+
+exports[`should render loading 2`] = `
+<div
+  id="performance-reviews-loading"
+>
+  Loading...
+</div>
+`;
+
+exports[`should render not render loading 1`] = `
+<div>
+  <div>
+    <div />
+  </div>
+</div>
+`;
+
+exports[`should render reviews 1`] = `
+<div>
+  <div>
+    <h2
+      class="is-size-5 title"
+      id="performance-review-response-title"
+    >
+      Review of 
+      hi
+    </h2>
+    <div>
+      <article
+        class="message message"
+      >
+        <div
+          class="message-body"
+        >
+          test
+          <hr />
+           - 
+          j
+           (
+          c
+          )
+           
+          <span
+            class="tag is-info"
+          >
+            Self Review
+          </span>
+        </div>
+      </article>
+      <article
+        class="message message"
+      >
+        <div
+          class="message-body"
+        >
+          test2
+          <hr />
+           - 
+          j
+           (
+          c
+          )
+           
+        </div>
+      </article>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`should render title 1`] = `
+<div>
+  <div>
+    <h2
+      class="is-size-5 title"
+      id="performance-review-response-title"
+    >
+      Review of 
+      hi
+    </h2>
+    <div />
+  </div>
+</div>
+`;

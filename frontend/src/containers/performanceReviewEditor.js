@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PerformanceReviewEditForm from '../components/performanceReviewEditForm';
 import { Redirect } from 'react-router-dom';
-import { get, post } from '../api';
+import { get, post, put } from '../api';
 
 export default ({ currentUser, reviewId }) => {
   const [review, setReview] = useState();
@@ -51,16 +51,27 @@ export default ({ currentUser, reviewId }) => {
   }, []);
 
   const submit = reviewData => {
-    let url = reviewId ? `/review/${reviewId}` : '/review';
-    post(url, reviewData)
-      .then(() => {
-        setSubmitted(true);
-        // then redirect back to list
-      })
-      .catch(err => {
-        setError(err.response ? err.response.data : 'Error saving your data');
-        // set the error
-      });
+    if (reviewId) {
+      put(`/review/${reviewId}`, reviewData)
+        .then(() => {
+          setSubmitted(true);
+          // then redirect back to list
+        })
+        .catch(err => {
+          setError(err.response ? err.response.data : 'Error saving your data');
+          // set the error
+        });
+    } else {
+      post('/review', reviewData)
+        .then(() => {
+          setSubmitted(true);
+          // then redirect back to list
+        })
+        .catch(err => {
+          setError(err.response ? err.response.data : 'Error saving your data');
+          // set the error
+        });
+    }
   };
 
   return submitted ? (

@@ -1,7 +1,7 @@
 version: '3'
 services:
     db:
-      image: postgres
+      image: postgres:alpine
       hostname: postgres
       environment:
         POSTGRES_DB: paypay

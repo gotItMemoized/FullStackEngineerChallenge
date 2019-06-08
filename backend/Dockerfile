@@ -1,4 +1,4 @@
-FROM golang AS builder
+FROM golang:1.12.5-stretch AS builder
 ENV GO111MODULE=on
 COPY . /backend
 WORKDIR /backend

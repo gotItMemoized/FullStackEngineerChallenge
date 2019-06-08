@@ -7,18 +7,23 @@ export default function({ currentUser = userDefault, logoutAction }) {
   const [showMenu, setShowMenu] = useState(false);
 
   const sections = () => {
-    if (!currentUser.loggedIn) return
+    if (!currentUser.loggedIn) return;
     const links = [];
     if (currentUser.isAdmin) {
       links.push(
-        <NavLink key="user" to="/users" className="navbar-item">
+        <NavLink key="user" id="users-menu-btn" to="/users" className="navbar-item">
           Users
         </NavLink>,
       );
     }
-    
+
     links.push(
-      <NavLink key="performance" to="/performance" className="navbar-item">
+      <NavLink
+        key="performance"
+        id="performance-menu-btn"
+        to="/performance"
+        className="navbar-item"
+      >
         Performance Reviews
       </NavLink>,
     );
@@ -26,11 +31,17 @@ export default function({ currentUser = userDefault, logoutAction }) {
   };
 
   const userControls = () => {
+    if (!currentUser.loggedIn) return;
     return (
       <div className="navbar-end">
         <div className="navbar-item">
           <div className="buttons">
-            <button type="button" className="button is-light" onClick={logoutAction}>
+            <button
+              type="button"
+              id="logout-btn"
+              className="button is-light"
+              onClick={logoutAction}
+            >
               Log out
             </button>
           </div>

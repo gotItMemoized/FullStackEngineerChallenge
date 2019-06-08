@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserEditForm from '../components/userEditForm';
 import { Redirect } from 'react-router-dom';
-import { get, post } from '../api';
+import { get, post, put } from '../api';
 
 export default ({ userId }) => {
   const [user, setUser] = useState();
@@ -19,16 +19,29 @@ export default ({ userId }) => {
   }, [userId]);
 
   const submit = userData => {
-    let url = userId ? `/user/${userId}` : '/user';
-    post(url, userData)
-      .then(() => {
-        setSubmitted(true);
-        // then redirect back to list
-      })
-      .catch(err => {
-        setError(err.response ? err.response.data : 'Error saving your data');
-        // set the error
-      });
+    if (userId) {
+      // update
+      put(`/user/${userId}`, userData)
+        .then(() => {
+          setSubmitted(true);
+          // then redirect back to list
+        })
+        .catch(err => {
+          setError(err.response ? err.response.data : 'Error saving your data');
+          // set the error
+        });
+    } else {
+      // create
+      post('/user', userData)
+        .then(() => {
+          setSubmitted(true);
+          // then redirect back to list
+        })
+        .catch(err => {
+          setError(err.response ? err.response.data : 'Error saving your data');
+          // set the error
+        });
+    }
   };
 
   return submitted ? (

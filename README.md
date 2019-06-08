@@ -8,9 +8,13 @@ James Crisman
 
 - React (leveraging create-react-app)
   - Bulma for (S)CSS
+  - Jest, React Testing Library
 - Golang
 - Postgresql
 - Docker
+- Postman/Newman
+
+[Notes about the design](./DESIGN.md)
 
 ### Logging in
 
@@ -36,6 +40,8 @@ With the current configuration it sets up and runs with postgres. It'll start wi
 docker-compose up
 ```
 
+And access via `localhost:3000` once the frontend is ready.
+
 ## Without docker
 
 ### Frontend
@@ -48,9 +54,9 @@ npm start
 
 ### Backend
 
-You can run with or without postgres, but the default configs expect a `paypay` named database. However you can define a different connection with the `POSTGRES_CONNECTION` environment variable.
+You can run with or without postgres, but the default postgres configs expect a `paypay` named database. However you can define a different connection with the `POSTGRES_CONNECTION` environment variable.
 
-For setting up postgres db you may need to run
+For setting up default postgres db you may need to run
 
 ```
 createdb paypay
@@ -68,7 +74,7 @@ go build -o backend
 ```
 
 ```
-# in memory/mapbased database
+# in memory/map-based database
 cd ./backend
 go build -o backend
 ./backend
@@ -76,7 +82,7 @@ go build -o backend
 
 ### API Tests
 
-I built out some api tests using [postman](https://www.getpostman.com/). They have a commandline tool to run API collections/tests with them. You can install the tool from npm.
+I built out some api tests using [postman](https://www.getpostman.com/). They have a commandline tool to run API collections/tests with them. You can install the cli from npm.
 
 *if you set the JWT_SECRET environment variable, you'll need to unset it for the script*
 
@@ -86,7 +92,7 @@ I built out some api tests using [postman](https://www.getpostman.com/). They ha
 npm install -g newman
 ```
 
-Here's a script that will build the backend, reset the database, and run the API test suite. It'll bring the server back into foreground after finishing the tests.
+Here's a script that will build the backend, reset the postgres database, and run the API test suite. It'll bring the server back into foreground after finishing the tests.
 
 ```
 cd ./backend

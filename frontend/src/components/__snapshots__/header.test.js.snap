@@ -1,0 +1,250 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders without crashing 1`] = `
+<div>
+  <nav
+    aria-label="main navigation"
+    class="navbar"
+    role="navigation"
+  >
+    <div
+      class="navbar-brand"
+    >
+      <a
+        aria-current="page"
+        class="navbar-item active"
+        href="/"
+      >
+        <strong>
+          Coworker Yelp
+        </strong>
+      </a>
+      <button
+        aria-expanded="false"
+        aria-label="menu"
+        class="navbar-burger burger"
+        data-target="navbarBasicExample"
+        type="button"
+      >
+        <span
+          aria-hidden="true"
+        />
+        <span
+          aria-hidden="true"
+        />
+        <span
+          aria-hidden="true"
+        />
+      </button>
+    </div>
+    <div
+      class="navbar-menu undefined"
+      id="navbarBasic"
+    />
+  </nav>
+</div>
+`;
+
+exports[`should have more buttons if logged in as admin user 1`] = `
+<div>
+  <nav
+    aria-label="main navigation"
+    class="navbar"
+    role="navigation"
+  >
+    <div
+      class="navbar-brand"
+    >
+      <a
+        aria-current="page"
+        class="navbar-item active"
+        href="/"
+      >
+        <strong>
+          Coworker Yelp
+        </strong>
+      </a>
+      <button
+        aria-expanded="false"
+        aria-label="menu"
+        class="navbar-burger burger"
+        data-target="navbarBasicExample"
+        type="button"
+      >
+        <span
+          aria-hidden="true"
+        />
+        <span
+          aria-hidden="true"
+        />
+        <span
+          aria-hidden="true"
+        />
+      </button>
+    </div>
+    <div
+      class="navbar-menu undefined"
+      id="navbarBasic"
+    >
+      <div
+        class="navbar-start"
+      >
+        <a
+          class="navbar-item"
+          href="/users"
+          id="users-menu-btn"
+        >
+          Users
+        </a>
+        <a
+          class="navbar-item"
+          href="/performance"
+          id="performance-menu-btn"
+        >
+          Performance Reviews
+        </a>
+      </div>
+      <div
+        class="navbar-end"
+      >
+        <div
+          class="navbar-item"
+        >
+          <div
+            class="buttons"
+          >
+            <button
+              class="button is-light"
+              id="logout-btn"
+              type="button"
+            >
+              Log out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</div>
+`;
+
+exports[`should have some buttons if logged in as regular user 1`] = `
+<div>
+  <nav
+    aria-label="main navigation"
+    class="navbar"
+    role="navigation"
+  >
+    <div
+      class="navbar-brand"
+    >
+      <a
+        aria-current="page"
+        class="navbar-item active"
+        href="/"
+      >
+        <strong>
+          Coworker Yelp
+        </strong>
+      </a>
+      <button
+        aria-expanded="false"
+        aria-label="menu"
+        class="navbar-burger burger"
+        data-target="navbarBasicExample"
+        type="button"
+      >
+        <span
+          aria-hidden="true"
+        />
+        <span
+          aria-hidden="true"
+        />
+        <span
+          aria-hidden="true"
+        />
+      </button>
+    </div>
+    <div
+      class="navbar-menu undefined"
+      id="navbarBasic"
+    >
+      <div
+        class="navbar-start"
+      >
+        <a
+          class="navbar-item"
+          href="/performance"
+          id="performance-menu-btn"
+        >
+          Performance Reviews
+        </a>
+      </div>
+      <div
+        class="navbar-end"
+      >
+        <div
+          class="navbar-item"
+        >
+          <div
+            class="buttons"
+          >
+            <button
+              class="button is-light"
+              id="logout-btn"
+              type="button"
+            >
+              Log out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</div>
+`;
+
+exports[`should not nav buttons if not logged in 1`] = `
+<div>
+  <nav
+    aria-label="main navigation"
+    class="navbar"
+    role="navigation"
+  >
+    <div
+      class="navbar-brand"
+    >
+      <a
+        aria-current="page"
+        class="navbar-item active"
+        href="/"
+      >
+        <strong>
+          Coworker Yelp
+        </strong>
+      </a>
+      <button
+        aria-expanded="false"
+        aria-label="menu"
+        class="navbar-burger burger"
+        data-target="navbarBasicExample"
+        type="button"
+      >
+        <span
+          aria-hidden="true"
+        />
+        <span
+          aria-hidden="true"
+        />
+        <span
+          aria-hidden="true"
+        />
+      </button>
+    </div>
+    <div
+      class="navbar-menu undefined"
+      id="navbarBasic"
+    />
+  </nav>
+</div>
+`;

@@ -3,7 +3,7 @@ import { HashRouter, Route, Redirect, Switch } from 'react-router-dom';
 import { Login, Loading } from './pages';
 import Header from './containers/header';
 import useLocalStorage from 'react-use-localstorage';
-import './App.scss';
+import '../node_modules/bulma/css/bulma.min.css';
 
 // Codesplit so we don't pull in pages that we don't need/have permissions to
 const AdminHome = lazy(() => import('./pages/adminHome'));

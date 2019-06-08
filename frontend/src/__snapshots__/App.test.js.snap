@@ -1,0 +1,108 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders without crashing 1`] = `
+<div>
+  <div
+    class="App"
+  >
+    <div>
+      <section
+        class="hero is-info is-fullheight"
+      >
+        <div
+          class="section"
+        >
+          <div
+            class="container"
+          >
+            <h1
+              class="title"
+            >
+              Welcome
+            </h1>
+            <form>
+              <div
+                class="field"
+              >
+                <label
+                  class="label"
+                  for="username"
+                >
+                  Username
+                </label>
+                <div
+                  class="control"
+                >
+                  <input
+                    class="input"
+                    id="username"
+                    placeholder="myUserName"
+                    type="username"
+                    value=""
+                  />
+                </div>
+              </div>
+              <div
+                class="field"
+              >
+                <label
+                  class="label"
+                  for="password"
+                >
+                  Password
+                </label>
+                <div
+                  class="control"
+                >
+                  <input
+                    class="input"
+                    id="password"
+                    placeholder="kanjiGaSukiDesu"
+                    type="password"
+                    value=""
+                  />
+                </div>
+              </div>
+              <div
+                class="field"
+              >
+                <div
+                  class="control buttons"
+                >
+                  <button
+                    class="button is-primary"
+                    disabled=""
+                    type="submit"
+                  >
+                    Login
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`renders without crashing 2`] = `
+<input
+  class="input"
+  id="username"
+  placeholder="myUserName"
+  type="username"
+  value=""
+/>
+`;
+
+exports[`renders without crashing 3`] = `
+<input
+  class="input"
+  id="password"
+  placeholder="kanjiGaSukiDesu"
+  type="password"
+  value=""
+/>
+`;

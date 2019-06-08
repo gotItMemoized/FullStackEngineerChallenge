@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should not render on false 1`] = `<div />`;
+
+exports[`should render on true 1`] = `
+<div>
+  <div
+    id="test"
+  >
+    hello
+  </div>
+</div>
+`;
+
+exports[`should render on true 2`] = `
+<div
+  id="test"
+>
+  hello
+</div>
+`;

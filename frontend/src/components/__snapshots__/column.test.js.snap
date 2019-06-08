@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders children 1`] = `
+<div>
+  <div
+    class="column undefined"
+  >
+    <div
+      id="something"
+    >
+      hello
+    </div>
+  </div>
+</div>
+`;
+
+exports[`renders children 2`] = `
+<div
+  id="something"
+>
+  hello
+</div>
+`;
+
+exports[`renders with classname 1`] = `
+<div>
+  <div
+    class="column test"
+  />
+</div>
+`;
+
+exports[`renders without crashing 1`] = `
+<div>
+  <div
+    class="column undefined"
+  />
+</div>
+`;

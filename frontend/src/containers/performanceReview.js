@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PerformanceReviewForm from '../components/performanceReviewForm';
 import { Redirect } from 'react-router-dom';
-import { get, post } from '../api';
+import { get, put } from '../api';
 
 export default ({ reviewId }) => {
   const [review, setReview] = useState();
@@ -23,7 +23,7 @@ export default ({ reviewId }) => {
   }, [reviewId]);
 
   const submit = reviewData => {
-    post(`/feedback/${reviewId}`, reviewData)
+    put(`/feedback/${reviewId}`, reviewData)
       .then(() => {
         setSubmitted(true);
         // then redirect back to list
