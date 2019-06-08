@@ -1,7 +1,4 @@
-import React from 'react';
+import wrapper from './wrapper';
 
-export default ({ className, children = '', ...props }) => (
-  <div className={'column ' + className} {...props}>
-    {children}
-  </div>
-);
+export default ({ className, children = '', ...props }) =>
+  wrapper({ children, type: 'column', className, ...props });

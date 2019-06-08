@@ -251,7 +251,10 @@ func (rs *SqlData) create(review *Review) error {
 }
 
 func (rs *SqlData) updateReview(previous, review *Review) error {
-	// this one will be gross
+	// We compare the previous state with the new state
+	// and insert/remove the differences
+
+	// update the base stuff
 	m := map[string]interface{}{"id": review.ID, "isactive": review.IsActive}
 	tx, err := rs.DB.Beginx()
 	if err != nil {
@@ -270,9 +273,10 @@ func (rs *SqlData) updateReview(previous, review *Review) error {
 		return err
 	}
 
+	// get the differences
 	addFeedback, removeFeedback := feedbackChanges(previous.Feedback, review.Feedback)
 
-	// disallow removing if inactive
+	// disallow removing if inactive (UI should make this difficult)
 	if !review.IsActive && len(removeFeedback) != 0 {
 		_ = tx.Rollback()
 		return errors.New("Cannot remove reviewers on completed performance review")
@@ -318,6 +322,7 @@ func (rs *SqlData) updateReview(previous, review *Review) error {
 func (rs *SqlData) Start() {
 }
 
+// close out the connection
 func (rs *SqlData) Stop() {
 	if rs.DB != nil {
 		rs.DB.Close()

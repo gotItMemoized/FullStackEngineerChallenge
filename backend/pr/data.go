@@ -19,6 +19,8 @@ func max(x, y int) int {
 	return x
 }
 
+// determines the differences in the two feedback arrays
+// returns an array of user ids that were added and an array of user ids that were removed
 func feedbackChanges(previous, current []Feedback) ([]string, []string) {
 	var reviewerToAdd []string
 	var reviewerToRemove []string

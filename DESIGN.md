@@ -67,11 +67,11 @@ Assigning a performance review can be added and deleted at any point. This can b
 
 - App is running in `DEV` mode in the containers and are not set up to build for production
 - SSL/HTTPS not setup
-- postman/newman api tests have hardcoded tokens that'll expire in like... 2 years. This is likely fixable, I just need more time with the tool
+- postman/newman api tests have hardcoded tokens that'll expire in like... 2 years. Can make this dynamic, I just need more time with the tool
 - postman/newman api tests require clean database (`-resetPostgres -seedDatabase`)
 - environment variable `JWT_TOKEN` is expected to not be set for the API tests
 - JWT tokens expire in 2 years rather than in 15 minutes. There's no refresh token mechanism.
-- Default user/pass should be dev only and need a mechanism to have an initial admin for prod (where it forces you to change the password)
+- Default (seeded) user/pass should be dev only and need a mechanism to have an initial admin for prod (where it forces you to change the password)
 - Admins set the passwords for the users
 - Users cannot change the passwords
 - Not enough unit tests
@@ -85,7 +85,7 @@ Assigning a performance review can be added and deleted at any point. This can b
 
 ### Feature Ideas
 
-Ideas of things that could be added if given more time.
+Ideas of things that could be added if given more time (in addition to fixing above issues).
 
 - autoclose the performance review once all of the user feedback is in.
 - user creation gives a invite code instead of setting the user password directly.

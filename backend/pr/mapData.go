@@ -167,39 +167,16 @@ func (rs *MapData) updateReview(previous, review *Review) error {
 	previous.IsActive = review.IsActive
 	feedbackArray := previous.Feedback
 
-	var reviewerToAdd []string
-	var reviewerToRemove []string
-	// We have to determine what needs to be added or deleted
-	feedbackMap := make(map[string]bool, max(len(previous.Feedback), len(review.Feedback)))
-	// first set everything in the map
-	for _, prevFB := range previous.Feedback {
-		feedbackMap[prevFB.ReviewerID] = false
-	}
-	// if it's not in the map, we need to add it else mark it as true
-	for _, newFB := range review.Feedback {
-		_, ok := feedbackMap[newFB.Reviewer.ID]
-		if !ok {
-			reviewerToAdd = append(reviewerToAdd, newFB.Reviewer.ID)
-		} else {
-			feedbackMap[newFB.Reviewer.ID] = true
-		}
-	}
-
-	// anything still false in the map will need to be removed
-	for id, wasFound := range feedbackMap {
-		if !wasFound {
-			reviewerToRemove = append(reviewerToRemove, id)
-		}
-	}
+	addFeedback, removeFeedback := feedbackChanges(previous.Feedback, review.Feedback)
 
 	// disallow removing if inactive
-	if !review.IsActive && len(reviewerToRemove) != 0 {
+	if !review.IsActive && len(removeFeedback) != 0 {
 		return errors.New("Cannot remove reviewers on completed performance review")
 	}
 
 	// remove anything we identified to remove
 	// this one's a bit slow
-	for _, val := range reviewerToRemove {
+	for _, val := range removeFeedback {
 		ind := -1
 		for removeIndex, feedback := range feedbackArray {
 			if feedback.Reviewer.ID == val {
@@ -213,7 +190,7 @@ func (rs *MapData) updateReview(previous, review *Review) error {
 	}
 
 	// add anything that was missing
-	for _, val := range reviewerToAdd {
+	for _, val := range addFeedback {
 		rs.feedbackCount += 1
 		feedbackId := strconv.Itoa(rs.feedbackCount)
 		feedbackArray = append(feedbackArray, Feedback{

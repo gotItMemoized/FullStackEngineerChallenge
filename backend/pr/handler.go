@@ -5,8 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gotItMemoized/FullStackEngineerChallenge/backend/handlers"
+
 	"github.com/go-chi/chi"
-	"github.com/go-chi/jwtauth"
 	"github.com/pkg/errors"
 )
 
@@ -14,6 +15,7 @@ type ReviewHandler struct {
 	Data Data
 }
 
+// return all reviews
 func (rs *ReviewHandler) All(w http.ResponseWriter, r *http.Request) {
 
 	reviews := rs.Data.getAllReviews()
@@ -23,9 +25,10 @@ func (rs *ReviewHandler) All(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeToOutput(w, reviews)
+	handlers.WriteToOutput(w, reviews)
 }
 
+// get a single review
 func (rs *ReviewHandler) Get(w http.ResponseWriter, r *http.Request) {
 	reviewID := chi.URLParam(r, "id")
 	review := rs.Data.getReviewById(reviewID)
@@ -35,9 +38,10 @@ func (rs *ReviewHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeToOutput(w, review)
+	handlers.WriteToOutput(w, review)
 }
 
+// create a review
 func (rs *ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
@@ -55,6 +59,7 @@ func (rs *ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// sets up the initial feedback
 	review.UserID = review.User.ID
 	for ind, feedback := range review.Feedback {
 		if len(feedback.Reviewer.ID) == 0 {
@@ -78,8 +83,13 @@ func (rs *ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// update the reviews
 func (rs *ReviewHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idToUpdate := chi.URLParam(r, "id")
+	if r.Body == nil {
+		http.Error(w, "Need more information to update", http.StatusBadRequest)
+		return
+	}
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 	var updatedReview Review
@@ -108,11 +118,12 @@ func (rs *ReviewHandler) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// get open performance reviews that need to be filled out by the current user
 func (rs *ReviewHandler) GetPendingFeedbackForReviewer(w http.ResponseWriter, r *http.Request) {
-	_, claims, _ := jwtauth.FromContext(r.Context())
-	userID := claims["id"].(string)
-	if len(userID) == 0 {
-		http.Error(w, "Could not confirm user", http.StatusUnauthorized)
+	userID, err := handlers.GetCurrentUserId(r)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not get current user"))
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 	reviews := rs.Data.getAllFeedbackForReviewer(userID)
@@ -122,15 +133,16 @@ func (rs *ReviewHandler) GetPendingFeedbackForReviewer(w http.ResponseWriter, r 
 		return
 	}
 
-	writeToOutput(w, reviews)
+	handlers.WriteToOutput(w, reviews)
 }
 
+// get review to be fill out
 func (rs *ReviewHandler) GetFeedback(w http.ResponseWriter, r *http.Request) {
 	feedbackID := chi.URLParam(r, "id")
-	_, claims, _ := jwtauth.FromContext(r.Context())
-	userID := claims["id"].(string)
-	if len(userID) == 0 {
-		http.Error(w, "Could not confirm user", http.StatusUnauthorized)
+	userID, err := handlers.GetCurrentUserId(r)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not get current user"))
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 	feedback := rs.Data.getFeedbackForReviewer(userID, feedbackID)
@@ -140,9 +152,10 @@ func (rs *ReviewHandler) GetFeedback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeToOutput(w, feedback)
+	handlers.WriteToOutput(w, feedback)
 }
 
+// updating performance review
 func (rs *ReviewHandler) GiveFeedback(w http.ResponseWriter, r *http.Request) {
 	idToUpdate := chi.URLParam(r, "id")
 	decoder := json.NewDecoder(r.Body)
@@ -156,10 +169,10 @@ func (rs *ReviewHandler) GiveFeedback(w http.ResponseWriter, r *http.Request) {
 	}
 	updatedReview.ID = idToUpdate
 
-	_, claims, _ := jwtauth.FromContext(r.Context())
-	userID := claims["id"].(string)
-	if len(userID) == 0 {
-		http.Error(w, "Could not confirm user", http.StatusUnauthorized)
+	userID, err := handlers.GetCurrentUserId(r)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not get current user"))
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
@@ -184,18 +197,4 @@ func (rs *ReviewHandler) GiveFeedback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-// this is technically inefficient, but allows for fast iterations and we can still get very fast responses locally
-func writeToOutput(w http.ResponseWriter, object interface{}) {
-	output, err := json.Marshal(object)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(output)
-	if err != nil {
-		log.Printf("error while writing output: %+v\n", err)
-	}
 }

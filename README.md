@@ -52,6 +52,12 @@ npm install
 npm start
 ```
 
+Run tests with
+```
+cd ./frontend
+npm run test
+```
+
 ### Backend
 
 You can run with or without postgres, but the default postgres configs expect a `paypay` named database. However you can define a different connection with the `POSTGRES_CONNECTION` environment variable.
@@ -66,11 +72,18 @@ createdb paypay
 
 the `-resetPostgres -seedDatabase` flags aren't necessary if you've run them once for postgres. And neither are required if you don't want to use postgres.
 
+The backend is built in Go. Ensure you're using a version of golang with modules (1.12+).
+
 ```
 # using postgres
 cd ./backend
 go build -o backend
 ./backend -usePostgres -resetPostgres -seedDatabase
+
+# or
+
+cd ./backend
+go run ./backend.go -usePostgres -resetPostgres -seedDatabase
 ```
 
 ```
@@ -78,6 +91,17 @@ go build -o backend
 cd ./backend
 go build -o backend
 ./backend
+
+# or 
+
+cd ./backend
+go run ./backend.go
+```
+
+Run unit tests with
+```
+cd ./backend
+go test ./...
 ```
 
 ### API Tests

@@ -39,7 +39,7 @@ export default ({ error, users = [], review = {}, submit = () => {} }) => {
       return;
     }
     let hasMessage = false;
-    for (const user of assignedUsers.value) {
+    for (const user of assignedUsers.value || []) {
       const { feedback } = user;
       if (
         feedback &&

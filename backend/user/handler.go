@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gotItMemoized/FullStackEngineerChallenge/backend/handlers"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/jwtauth"
@@ -30,7 +32,7 @@ func (u *UserHandler) All(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeToOutput(w, users)
+	handlers.WriteToOutput(w, users)
 }
 
 func (u *UserHandler) Get(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +44,7 @@ func (u *UserHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeToOutput(w, user)
+	handlers.WriteToOutput(w, user)
 }
 
 func (u *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -82,6 +84,10 @@ func (u *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idToUpdate := chi.URLParam(r, "id")
+	if r.Body == nil {
+		http.Error(w, "Need more information to update", http.StatusBadRequest)
+		return
+	}
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 	var updatedUser User
@@ -89,6 +95,19 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(errors.Wrap(err, "Could not decode user"))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	curUserId, err := handlers.GetCurrentUserId(r)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not get current user"))
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if curUserId == idToUpdate && !updatedUser.IsAdmin {
+		log.Printf("User tried to de-admin themselves\n")
+		http.Error(w, "Cannot de-admin yourself", http.StatusUnauthorized)
 		return
 	}
 
@@ -122,20 +141,20 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 func (u *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	toDeleteId := chi.URLParam(r, "id")
 
-	_, claims, _ := jwtauth.FromContext(r.Context())
-	userID := claims["id"].(string)
-	if len(userID) == 0 {
-		http.Error(w, "Could not confirm user", http.StatusUnauthorized)
+	curUserId, err := handlers.GetCurrentUserId(r)
+	if err != nil {
+		log.Print(errors.Wrap(err, "Could not get current user"))
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	if userID == toDeleteId {
+	if curUserId == toDeleteId {
 		log.Printf("User tried to delete themselves\n")
 		http.Error(w, "Cannot delete yourself", http.StatusUnauthorized)
 		return
 	}
 
-	err := u.Data.delete(toDeleteId)
+	err = u.Data.delete(toDeleteId)
 	if err != nil {
 		log.Printf("Couldn't delete user\n%+v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -176,23 +195,9 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeToOutput(w, tokens{
+	handlers.WriteToOutput(w, tokens{
 		JWT: s,
 	})
-}
-
-// this is technically inefficient, but allows for fast iterations and we can still get very fast responses locally
-func writeToOutput(w http.ResponseWriter, object interface{}) {
-	output, err := json.Marshal(object)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(output)
-	if err != nil {
-		log.Printf("error while writing output: %+v\n", err)
-	}
 }
 
 type credentials struct {

@@ -45,6 +45,7 @@ func init() {
 }
 
 func main() {
+	// signal listener
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
@@ -66,7 +67,6 @@ func main() {
 	us, rs := setupDatasource()
 	userHandler.Data = *us
 	reviewHandler.Data = *rs
-
 	userHandler.Data.Start()
 	reviewHandler.Data.Start()
 
@@ -82,7 +82,7 @@ func main() {
 func getRouter(auth *jwtauth.JWTAuth, userHandler *user.UserHandler, reviewHandler *pr.ReviewHandler) http.Handler {
 	r := chi.NewRouter()
 
-	// A good base middleware stack
+	// A good base middleware
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)

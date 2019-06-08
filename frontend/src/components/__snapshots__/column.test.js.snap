@@ -3,7 +3,7 @@
 exports[`renders children 1`] = `
 <div>
   <div
-    class="column undefined"
+    class="column "
   >
     <div
       id="something"
@@ -33,7 +33,7 @@ exports[`renders with classname 1`] = `
 exports[`renders without crashing 1`] = `
 <div>
   <div
-    class="column undefined"
+    class="column "
   />
 </div>
 `;
