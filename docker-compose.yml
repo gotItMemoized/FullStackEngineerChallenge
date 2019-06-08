@@ -5,15 +5,15 @@ services:
       hostname: postgres
       environment:
         POSTGRES_DB: paypay
-      ports:
-        - 5432:5432
+      # ports:
+      #   - 5432:5432
     backend:
         build: ./backend
         environment:
           ENV: DEV
           POSTGRES_CONNECTION: postgresql://postgres@db:5432?sslmode=disable
-        ports:
-          - 8000:8000
+        # ports:
+        #   - 8000:8000
         links:
           - db
     frontend:
