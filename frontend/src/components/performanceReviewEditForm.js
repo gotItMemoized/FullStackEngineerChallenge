@@ -4,6 +4,7 @@ import useFormCheckbox from '../hooks/useFormCheckbox';
 import useFormSelect from '../hooks/useFormSelect';
 import Message from './message';
 
+// new/edit performance review form
 export default ({ error, users = [], review = {}, submit = () => {} }) => {
   const user = useFormSelect(review.user);
   const assignedUsers = useFormSelect(review.feedback);
@@ -100,9 +101,14 @@ export default ({ error, users = [], review = {}, submit = () => {} }) => {
         </div>
         <div className="field">
           <label className="checkbox" htmlFor="isActive">
-            <input type="checkbox" id="isActive" {...isActive} /> Allow Responses
+            <input type="checkbox" disabled={!review.id} id="isActive" {...isActive} /> Allow
+            Responses
           </label>
         </div>
+        <Message className="is-info">
+          You can read any feedback after users have submitted feedback and you turn off 'Allow
+          Responses'.
+        </Message>
         {showWarning()}
         <div className="field">
           <label className="label" htmlFor="assignedUsers">

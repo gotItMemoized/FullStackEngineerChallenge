@@ -1,6 +1,8 @@
 export default (statement, component) => {
   if (statement === true) {
-    // function check voodoo
+    // if it's a function, we'll run it and return
+    // this allows us to have things that need to execute later
+    //  and not when they're written into the parameter
     if (component instanceof Function) {
       return component();
     }

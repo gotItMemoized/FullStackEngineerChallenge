@@ -11,14 +11,12 @@ import (
 	"time"
 
 	"github.com/gotItMemoized/FullStackEngineerChallenge/backend/pr"
-
 	"github.com/gotItMemoized/FullStackEngineerChallenge/backend/user"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/jwtauth"
 	"github.com/jmoiron/sqlx"
-
 	_ "github.com/lib/pq"
 )
 
@@ -79,6 +77,7 @@ func main() {
 	}
 }
 
+// map out all the routes and middleware
 func getRouter(auth *jwtauth.JWTAuth, userHandler *user.UserHandler, reviewHandler *pr.ReviewHandler) http.Handler {
 	r := chi.NewRouter()
 

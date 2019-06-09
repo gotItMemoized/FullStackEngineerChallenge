@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PerformanceReviewResponses from '../components/performanceReviewResponses';
 import { get } from '../api';
 
+// view submitted performance reviews
 export default ({ reviewId }) => {
   const [review, setReview] = useState();
 

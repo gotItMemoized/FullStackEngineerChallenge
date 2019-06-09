@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { showIf } from '../render';
 import { userDefault } from '../App';
 
+// the page header
 export default function({ currentUser = userDefault, logoutAction }) {
   const [showMenu, setShowMenu] = useState(false);
 

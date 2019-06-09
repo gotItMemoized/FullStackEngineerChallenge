@@ -2,17 +2,54 @@
 
 ## Frontend
 
-### Setting Up
-
 Taking advantage of create-react-app as it provides a lot of features out of the box and I can customize those thing if I really need to.
+
+### Technical decisions
+
+- create-react-app
+  - debugging, testing, building tools included
+  - can eject and change webpack/babel/etc configurations if needed.
+  - kept up to date as it's maintained by developers on the react team
+- For state management I just used react hooks rather than redux/mobx.
+  - Less boiler plate
+  - reduced complexity
+  - if the project would become more complex or required coordination with more people, redux/mobx could become more necessary.
+- axios to help with api requests
+- partial JWT implementation for user login
+  - has technical compromises mentioned below
+
+### Envirment Variables
+
+- `DEV_FRONTEND_PROXY`: proxy url for frontend. Only used in `dev` builds
 
 ## Backend
 
-### Setting up
-
-Writing the backend in golang. Sorry if there's any issue with getting golang set up on your machine. Since I'm using modules it should be a little bit easier, but it can be a little quirky to set up. I'm much more familiar with it for writing backend services from nothing. Ruby-On-Rails in api mode would possibly be much easier, but not as fun to talk about in an interview.
+Wrote the backend in golang (requires v1.12+). Sorry if there's any issue with getting golang set up on your machine (Docker should make it easy to run the app). Since I'm using modules it should be a little bit easier, but it can be a little quirky to set up. I'm much more familiar with it for writing backend services from nothing. Ruby-On-Rails in api mode would possibly be much easier, but not as fun to talk about in an interview.
 
 I'm making an assumption that there's going to initially always be an admin and a user. This will be set up with the `-resetPostgres -seedDatabase` flags (can see more in the [README.md](./README.md) on how to use).
+
+### Technical Decisions
+
+- Modules (requires Golang v1.12+)
+  - gets dependencies easily and automatically
+- Data interfaces for databases
+  - allows you to work with a local in-memory database
+  - implement different databases easily
+  - currently implements a map-based in-memory database or postgresql
+- JWT auth checks
+  - compromises mentioned below
+
+### Environment Variables
+
+- `JWT_SECRET`: set the secret used in the JWTs. Defaults to `thisIsAnInsecureSecret`
+- `ENV`: environment you're running in. Does not default! set to `DEV` for development. `PROD` would be production, but current there's no production configurations.
+- `POSTGRES_CONNECTION`: sets the connection string to postgres. Defaults to `dbname=paypay sslmode=disable`
+
+### Flags
+
+- `-usePostgres`: use a postgres database (defaults to use in-memory database)
+- `-resetDatabase`: reset the dev database (currently no-op if not using postgres)
+- `-seedDatabase`: seed the dev database (currently no-op if not using postgres)
 
 ### Auth
 
@@ -26,30 +63,30 @@ Second, I'm not using https. This makes the app vulnerable to MITM attacks.
 
 Also, by default not using SSL for connecting to the database.
 
-### Database
+## Database
 
-Using postgresql and taking advantage of sql and sqlx packages for golang.
+The design of the backend allows other implementations if necessary, but I'm a little more familiar with postgresql so I used it in this case.
 
-#### Tables
+### Tables
 
-##### user
+#### user
 
 |name|description|
 |-|-|
 |id|reference id|
 |name| users real/display name |
-|username| username for login |
+|username| username for login (unique) |
 |password| bcrypted password hash |
 |isAdmin|if the user has admin permissions|
 
-##### reviews
+#### reviews
 |name|description|
 |-|-|
 |id|reference id|
-|userId|user getting reviewed|
+|userId|user getting reviewed FK|
 |isActive|if the performance review is still open for feedback|
 
-##### review_feedback
+#### review_feedback
 |name|description|
 |-|-|
 |id|reference id|
@@ -57,13 +94,23 @@ Using postgresql and taking advantage of sql and sqlx packages for golang.
 |reviewerId|user giving feedback FK|
 |message|feedback content|
 
-#### Database Design Compromises
+### Database Design Compromises
 
 As mentioned in the Auth section. I'm omitting some security things like refresh tokens. So there's no additional table for that. I'm also omitting timestamps (create, update, etc) from the tables for the sake of simplicity, but it'd be important to have in a real application.
 
 Assigning a performance review can be added and deleted at any point. This can be a desired feature, but this current design doesn't allow for logical deletes. Logical deletes would allow you to delete, and undelete an item. This prevents you from losing the feedback message from the assigned user.
 
-### Known issues / Compromises / Notes / Assumptions
+## Other Technologies Used
+
+### Docker
+
+I wanted to provide a way to easily run the application without needing to worry about configurations or having certain things installed.
+
+### Postman/Newman
+
+Postman is a tool I often use to check API endpoints. They have some testing tools built into it as well. I used this tool because it let me easily check existing functionality and ensure I maintain functionality as I make changes. I can make the tests more strict, but right now they're rather simple checks.
+
+## Known issues / Compromises / Notes / Assumptions
 
 - App is running in `DEV` mode in the containers and are not set up to build for production
 - SSL/HTTPS not setup
@@ -82,11 +129,13 @@ Assigning a performance review can be added and deleted at any point. This can b
 - node_modules is too big and makes the current container size much bigger because we're still running in DEV (much smaller with the node:current-alpine image however) actually building and using something like nginx or kubernetes to route and serve files
 - there's never enough tests
 - Login won't work if local storage isn't supported by the browser or disabled. Also local storage is susceptable to XSS if you're not careful (if a library gets compromised, etc. This is why tokens are usually short lived rather than 2 years).
+- Item ordering isn't sorted in any particular way from any of the `/all` calls
 
-### Feature Ideas
+## Feature Ideas
 
 Ideas of things that could be added if given more time (in addition to fixing above issues).
 
+- allow more complex feedback options, maybe allow you to customize questions
 - autoclose the performance review once all of the user feedback is in.
 - user creation gives a invite code instead of setting the user password directly.
 - typescript
@@ -97,3 +146,7 @@ Ideas of things that could be added if given more time (in addition to fixing ab
 - access codes for a specific reviewer/review
 - redis cache?
 - frontend docker image could use the build script, and nginx to proxy calls to the backend server
+- proptypes
+- more tests
+- coordinate page colors better
+- how to deal with 404s when cannot connect to backend?

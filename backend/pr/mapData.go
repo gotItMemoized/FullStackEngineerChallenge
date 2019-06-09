@@ -23,7 +23,7 @@ func (rs *MapData) getAllReviews() []Review {
 	results := make([]Review, len(rs.reviews))
 	ind := 0
 	for _, review := range rs.reviews {
-		results[0] = review
+		results[ind] = review
 		ind += 1
 	}
 

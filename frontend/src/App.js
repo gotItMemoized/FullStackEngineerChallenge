@@ -104,6 +104,7 @@ const App = () => {
       <Route key="/login" path="/login" component={() => <Redirect to="/" />} />,
     );
 
+    // we do a switch here to maintain the header at the top when we get a 404
     routes.push(
       <Switch key="pageOr404">
         {viewPages}
@@ -111,7 +112,7 @@ const App = () => {
       </Switch>,
     );
   } else {
-    // route if you're not logged in :)
+    // only route when you're not logged i
     routes.push(
       <Switch key="/login">
         <Route
@@ -123,6 +124,8 @@ const App = () => {
       </Switch>,
     );
   }
+  // Suspense is for the async of the code splitting
+  // could later be used for loading screens in some future versions of react
   return (
     <div className="App">
       <HashRouter>

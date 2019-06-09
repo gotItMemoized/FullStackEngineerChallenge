@@ -6,15 +6,15 @@ James Crisman
 
 ## Technologies
 
-- React (leveraging create-react-app)
-  - Bulma for (S)CSS
+- React
+  - Bulma for CSS
   - Jest, React Testing Library
 - Golang
 - Postgresql
 - Docker
 - Postman/Newman
 
-[Notes about the design](./DESIGN.md)
+## [Notes about the design and more documentation](./DESIGN.md)
 
 ### Logging in
 
@@ -33,7 +33,7 @@ password: asdfasdfasdf
 
 ## With Docker
 
-With the current configuration it sets up and runs with postgres. It'll start with a fresh database on start up. It is running these in "DEV" mode. So you may see dev-only console warnings from things like react-router when you click on the link of a page you're already on. Those warnings aren't there in a production build.
+With the current configuration it sets up and runs with postgres. It'll start with a fresh database on start up. It is running these in "DEV" mode.
 
 ```
 # from the base directory
@@ -41,6 +41,8 @@ docker-compose up
 ```
 
 And access via `localhost:3000` once the frontend is ready.
+
+> You can run the API tests on the docker container as well, but you'll need to make port 8000 available for the backend
 
 ## Without docker
 
@@ -58,7 +60,7 @@ cd ./frontend
 npm run test
 ```
 
-### Backend
+### Postgres
 
 You can run with or without postgres, but the default postgres configs expect a `paypay` named database. However you can define a different connection with the `POSTGRES_CONNECTION` environment variable.
 
@@ -68,11 +70,15 @@ For setting up default postgres db you may need to run
 createdb paypay
 ```
 
-[if you have issues with setting up the postgres db](https://www.postgresql.org/docs/10/tutorial-createdb.html)
+[some documentation on setting up postgresql here](https://www.postgresql.org/docs/10/tutorial-createdb.html)
+
+### Backend
+
+The backend is built in Go. Ensure you're using a version of golang with modules (1.12+).
 
 the `-resetPostgres -seedDatabase` flags aren't necessary if you've run them once for postgres. And neither are required if you don't want to use postgres.
 
-The backend is built in Go. Ensure you're using a version of golang with modules (1.12+).
+> `-resetPostgres -seedDatabase` are only available with the `ENV=DEV` environment variable. This is to prevent you from accidentally deleting/inserting test data into a production environment. It's not open by default in the `docker-compose.yml`
 
 ```
 # using postgres
@@ -117,6 +123,8 @@ npm install -g newman
 ```
 
 Here's a script that will build the backend, reset the postgres database, and run the API test suite. It'll bring the server back into foreground after finishing the tests.
+
+> You'll need environment variable `ENV=DEV` for the `-usePostgres` version of these scripts.
 
 ```
 cd ./backend

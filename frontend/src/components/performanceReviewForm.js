@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
+// form to submit the performance review
 export default ({ error, review = {}, submit = () => {} }) => {
   const [message, setMessage] = useState(review.message);
   useEffect(() => {

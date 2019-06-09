@@ -4,6 +4,7 @@ import { post } from '../api';
 import Login from '../components/login';
 import jwt from 'jsonwebtoken';
 
+// login page
 export default ({ user, setUser }) => {
   const [error, setError] = useState();
 

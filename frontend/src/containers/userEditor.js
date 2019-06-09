@@ -3,6 +3,7 @@ import UserEditForm from '../components/userEditForm';
 import { Redirect } from 'react-router-dom';
 import { get, post, put } from '../api';
 
+// update a single user
 export default ({ userId }) => {
   const [user, setUser] = useState();
   const [submitted, setSubmitted] = useState(false);

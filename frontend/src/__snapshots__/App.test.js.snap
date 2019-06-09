@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`renders without crashing 1`] = `
+exports[`renders without crashing and directs to login 1`] = `
 <div>
   <div
     class="App"
@@ -87,7 +87,7 @@ exports[`renders without crashing 1`] = `
 </div>
 `;
 
-exports[`renders without crashing 2`] = `
+exports[`renders without crashing and directs to login 2`] = `
 <input
   class="input"
   id="username"
@@ -97,7 +97,7 @@ exports[`renders without crashing 2`] = `
 />
 `;
 
-exports[`renders without crashing 3`] = `
+exports[`renders without crashing and directs to login 3`] = `
 <input
   class="input"
   id="password"

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+// login form
 function useFormInput(initial) {
   const [value, setValue] = useState(initial);
 

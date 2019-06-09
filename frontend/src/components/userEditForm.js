@@ -4,6 +4,7 @@ import useFormCheckbox from '../hooks/useFormCheckbox';
 import Message from './message';
 import { showIf } from '../render';
 
+// user form
 export default ({ error, user = {}, submit = () => {} }) => {
   const username = useFormInput(user.username);
   const name = useFormInput(user.name);
@@ -49,7 +50,7 @@ export default ({ error, user = {}, submit = () => {} }) => {
             Name
           </label>
           <div className="control">
-            <input id="name" placeholder="James" className="input" {...name} />
+            <input id="name" placeholder="James" required className="input" {...name} />
           </div>
         </div>
         <div className="field">

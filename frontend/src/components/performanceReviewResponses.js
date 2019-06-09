@@ -2,6 +2,7 @@ import React from 'react';
 import Message from './message';
 import { showIf } from '../render';
 
+// display the feedback responses
 export default ({ review = {} }) => {
   if (!review.feedback) {
     return <div id="performance-reviews-loading">Loading...</div>;

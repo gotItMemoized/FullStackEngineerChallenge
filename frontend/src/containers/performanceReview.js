@@ -3,6 +3,7 @@ import PerformanceReviewForm from '../components/performanceReviewForm';
 import { Redirect } from 'react-router-dom';
 import { get, put } from '../api';
 
+// submit a performance review
 export default ({ reviewId }) => {
   const [review, setReview] = useState();
   const [submitted, setSubmitted] = useState(false);

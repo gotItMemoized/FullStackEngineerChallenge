@@ -5,7 +5,7 @@ import App from './App';
 
 afterEach(cleanup);
 
-it('renders without crashing', () => {
+it('renders without crashing and directs to login', () => {
   const div = document.createElement('div');
   ReactDOM.render(<App />, div);
   ReactDOM.unmountComponentAtNode(div);

@@ -58,6 +58,11 @@ func (u *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(user.Username) == 0 || len(user.Name) == 0 {
+		http.Error(w, "Name and Username is required", http.StatusBadRequest)
+		return
+	}
+
 	if u.Data.getByUsername(user.Username) != nil {
 		http.Error(w, "User already exists", http.StatusBadRequest)
 		return

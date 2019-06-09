@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { get } from '../api';
 import { showIf } from '../render';
 
+// display performance reviews that you can submit feedback on
 const FeedbackTable = ({ reviews = [] }) => {
   const headerFooter = (
     <tr>

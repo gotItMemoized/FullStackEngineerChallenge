@@ -3,47 +3,7 @@ import { Columns, Column } from '../components';
 import { Link } from 'react-router-dom';
 import { get } from '../api';
 import { showIf } from '../render';
-
-const ReviewTable = ({ reviews = [] }) => {
-  const headerFooter = (
-    <tr>
-      <th>Name</th>
-      <th>Responses</th>
-      <th>Edit</th>
-    </tr>
-  );
-  const rows = reviews.map(review => {
-    return (
-      <tr key={review.id}>
-        <td>{review.user.name + ' '}</td>
-        <td>
-          {showIf(
-            !review.isActive,
-            <Link
-              className="button is-primary is-outlined is-small"
-              to={`/performance-manager/${review.id}/view`}
-            >
-              View
-            </Link>,
-          )}
-        </td>
-        <td>
-          <Link className="button is-small" to={`/performance-manager/${review.id}/edit`}>
-            Edit
-          </Link>
-        </td>
-      </tr>
-    );
-  });
-
-  return (
-    <table className="table is-fullwidth is-hoverable is-striped">
-      <thead>{headerFooter}</thead>
-      <tfoot>{headerFooter}</tfoot>
-      <tbody>{rows}</tbody>
-    </table>
-  );
-};
+import ReviewTable from '../components/reviewTable';
 
 export default () => {
   const [reviews, setReviews] = useState([]);

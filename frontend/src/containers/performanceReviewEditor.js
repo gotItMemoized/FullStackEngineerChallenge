@@ -3,6 +3,7 @@ import PerformanceReviewEditForm from '../components/performanceReviewEditForm';
 import { Redirect } from 'react-router-dom';
 import { get, post, put } from '../api';
 
+// edit a specfic performance review
 export default ({ currentUser, reviewId }) => {
   const [review, setReview] = useState();
   const [users, setUsers] = useState([]);
